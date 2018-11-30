@@ -29,7 +29,7 @@ Usage: fbtc [command]
     withdraw  [address] [amount]  Withdraw fbtc to a Bitcoin address
 ```
 
-Now generate a Bitcoin deposit address.
+Now let's generate a Bitcoin deposit address.
 
 This address is tied to your `fbtc` address; any Bitcoin sent to it will credit your `fbtc` address for the same amount:
 
