@@ -63,7 +63,7 @@ Your balance: ${await coinsWallet.balance()}`)
     let btcDepositAddress = bitcoin.deriveBtcAddress(depositPrivateKey)
 
     console.log(`Deposit address: ${btcDepositAddress}\n`)
-    let spinner = ora(`Waiting for deposit...`).start()
+    // change it to a check mark
     await doDepositProcess(
       depositPrivateKey,
       btcDepositAddress,
@@ -89,10 +89,15 @@ async function doDepositProcess(
   client,
   coinsWallet
 ) {
+  let spinner = ora(`Waiting for deposit...`).start()
   // get validators and signatory keys
   let { validators, signatories } = await getPeggingInfo(client)
   // wait for a deposit to the intermediate btc address
   let depositUTXOs = await bitcoin.fetchUTXOs(intermediateBtcAddress)
+  let depositAmount = depositUTXOs[0].value / 1e8
+  spinner.succeed(`Detected incoming deposit of ${depositAmount} Bitcoin.`)
+  let spinner2 = ora('Broadcasting deposit transaction...').start()
+
   // build intermediate address -> signatories transaction
   let depositTransaction = bitcoin.createDepositTx(
     depositPrivateKey,
@@ -102,6 +107,11 @@ async function doDepositProcess(
     depositUTXOs
   )
   await bitcoin.broadcastTx(depositTransaction)
+  let explorerLink = `https://live.blockcypher.com/btc-testnet/tx/${bitcoin
+    .getTxHash(depositTransaction)
+    .reverse()
+    .toString('hex')}`
+  spinner2.succeed(`Deposit transaction relayed. ${explorerLink}`) // link here?
 }
 
 async function getPeggingInfo(client) {
