@@ -11,6 +11,7 @@ let coins = require('coins')
 let connect = require('lotion-connect')
 let ora = require('ora')
 let bitcoin = require('../lib/bitcoin.js')
+let base58 = require('bs58check')
 
 const TESTNET_GCI =
   'fb880e70a53ca462c791b0ecef8b17bd0e091a52f42747319bb35b9cc8dc9a71'
@@ -61,15 +62,15 @@ Your balance: ${await coinsWallet.balance()}`)
     let depositPrivateKey = generateSecpPrivateKey()
     let btcDepositAddress = bitcoin.deriveBtcAddress(depositPrivateKey)
 
-    let spinner = ora(
-      `Waiting for Bitcoin deposit to ${btcDepositAddress}`
-    ).start()
+    console.log(`Deposit address: ${btcDepositAddress}\n`)
+    let spinner = ora(`Waiting for deposit...`).start()
     await doDepositProcess(
       depositPrivateKey,
       btcDepositAddress,
       client,
       coinsWallet
     )
+    process.exit()
   } else if (cmd === 'withdraw' && argv.length === 3) {
     let recipientBtcAddress = argv[1]
     let amount = Number(argv[2])
@@ -97,14 +98,21 @@ async function doDepositProcess(
     depositPrivateKey,
     validators,
     signatories,
-    coinsWallet.address(),
+    base58.decode(coinsWallet.address()),
     depositUTXOs
   )
   await bitcoin.broadcastTx(depositTransaction)
 }
 
 async function getPeggingInfo(client) {
-  return await client.state.pegInfo
+  let validators = {}
+  client.validators.forEach(v => {
+    validators[v.pub_key.value] = v.voting_power
+  })
+
+  let signatories = await client.state.bitcoin.signatoryKeys
+
+  return { signatories, validators }
 }
 
 function generateSecpPrivateKey() {
