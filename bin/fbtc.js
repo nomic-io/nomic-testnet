@@ -142,5 +142,5 @@ function loadWallet(client) {
     privKey = Buffer.from(fs.readFileSync(path, 'utf8'), 'hex')
   }
 
-  return coins.wallet(privKey, client)
+  return coins.wallet(privKey, client, { route: 'pbtc' })
 }
