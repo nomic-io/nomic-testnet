@@ -7,7 +7,10 @@ let app = lotion({
   genesisPath: './genesis.json',
   keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
   p2pPort: 1337,
-  peers: ['pbtc.mappum.com:1337', 'pbtc.judd.co:1337']
+  peers: [
+    'df2c953cccf30c59127b5d69bd0b4289b27ecec8@pbtc.mappum.com:1337',
+    '9c89fc7717a598119ca2e76aee2c09b242c2d05d@pbtc.judd.co'
+  ]
 })
 
 const trustedHeader = {
