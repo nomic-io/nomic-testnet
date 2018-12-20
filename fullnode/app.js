@@ -5,7 +5,9 @@ let fs = require('fs')
 
 let app = lotion({
   genesisPath: './genesis.json',
-  keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null
+  keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
+  p2pPort: 1337,
+  peers: ['pbtc.mappum.com:1337', 'pbtc.judd.co:1337']
 })
 
 const trustedHeader = {
