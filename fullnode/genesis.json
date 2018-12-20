@@ -19,6 +19,15 @@
       },
       "power": "10",
       "name": "Judd"
+    },
+    {
+      "address": "893133474223BA13B46DD29943ECB3071C655AC4",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "TKv4vdu6W+bJRWXGIAyzomBMT6OOXioFX5ME1GAbR2w="
+      },
+      "power": "10",
+      "name": "Matt"
     }
   ],
   "app_hash": ""

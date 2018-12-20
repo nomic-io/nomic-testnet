@@ -74,6 +74,9 @@ Your balance: ${await coinsWallet.balance()}`)
   } else if (cmd === 'withdraw' && argv.length === 3) {
     let recipientBtcAddress = argv[1]
     let amount = Number(argv[2])
+
+    await doWithdrawProcess(coinsWallet, recipientBtcAddress, amount)
+
     process.exit()
   } else {
     console.log(USAGE)
@@ -111,7 +114,40 @@ async function doDepositProcess(
     .getTxHash(depositTransaction)
     .reverse()
     .toString('hex')}`
-  spinner2.succeed(`Deposit transaction relayed. ${explorerLink}`) // link here?
+  spinner2.succeed(`Deposit transaction relayed. ${explorerLink}`)
+
+  let spinner3 = ora(
+    'Waiting for Bitcoin miners to mine a block (this might take a while)...'
+  ).start()
+  await bitcoin.waitForConfirmation()
+  spinner3.succeed(`Deposit succeeded.`)
+
+  console.log('\n\nCheck your balance with:')
+  console.log('$ pbtc balance')
+}
+
+async function doWithdrawProcess(coinsWallet, address, amount) {
+  let spinner = ora('Broadcasting withdrawal transaction...').start()
+  let res = await coinsWallet.send({
+    type: 'bitcoin',
+    amount,
+    script: bitcoin.createOutputScript(address)
+  })
+
+  console.log(res)
+  spinner.succeed('Broadcasted withdrawal transaction.')
+
+  let spinner2 = ora(
+    'Waiting for signatories to build Bitcoin transaction...'
+  ).start()
+
+  let utxos = await bitcoin.fetchUTXOs(address)
+  let withdrawalTxLink = `https://live.blockcypher.com/btc-testnet/tx/${utxos[0].txid
+    .reverse()
+    .toString('hex')}`
+
+  spinner2.succeed(`Withdrawal succeeded. ${withdrawalTxLink}`)
+  return res
 }
 
 async function getPeggingInfo(client) {

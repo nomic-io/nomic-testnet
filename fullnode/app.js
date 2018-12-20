@@ -35,7 +35,14 @@ const trustedHeader = {
 
 app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
 
-app.use('pbtc', coins())
+app.use(
+  'pbtc',
+  coins({
+    handlers: {
+      bitcoin: bitcoinPeg.coinsHandler('bitcoin')
+    }
+  })
+)
 
 async function main() {
   let appInfo = await app.start()
