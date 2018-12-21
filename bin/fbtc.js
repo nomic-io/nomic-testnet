@@ -101,6 +101,11 @@ async function doDepositProcess(
   // wait for a deposit to the intermediate btc address
   let depositUTXOs = await bitcoin.fetchUTXOs(intermediateBtcAddress)
   let depositAmount = depositUTXOs[0].value / 1e8
+
+  if (depositAmount < 20000) {
+    spinner.fail('Deposit amount must be greater than .0002 Bitcoin')
+    process.exit()
+  }
   spinner.succeed(`Detected incoming deposit of ${depositAmount} Bitcoin.`)
   let spinner2 = ora('Broadcasting deposit transaction...').start()
 
@@ -139,6 +144,7 @@ async function doWithdrawProcess(coinsWallet, address, amount) {
 
   if (!res.height) {
     spinner.fail('Invalid withdrawal transaction')
+    console.log(res)
     process.exit()
   }
 
