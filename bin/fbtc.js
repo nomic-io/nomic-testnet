@@ -14,7 +14,7 @@ let bitcoin = require('../lib/bitcoin.js')
 let base58 = require('bs58check')
 
 const TESTNET_GCI =
-  'fb880e70a53ca462c791b0ecef8b17bd0e091a52f42747319bb35b9cc8dc9a71'
+  '58bae8263f5ac4f1a3c93c2876538054fd8727d44504c30973a08ef82c64424b'
 
 const USAGE = `
 Usage: fbtc [command]
@@ -134,7 +134,11 @@ async function doWithdrawProcess(coinsWallet, address, amount) {
     script: bitcoin.createOutputScript(address)
   })
 
-  console.log(res)
+  if (!res.height) {
+    spinner.fail('Invalid withdrawal transaction')
+    process.exit()
+  }
+
   spinner.succeed('Broadcasted withdrawal transaction.')
 
   let spinner2 = ora(
