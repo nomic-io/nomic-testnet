@@ -12,11 +12,8 @@
   },
   "validators": [
     {
-      "address": "A1101F5C1C26E49DF0BB60A98CA56CDFFCCD158D",
-      "pub_key": {
-        "type": "tendermint/PubKeyEd25519",
-        "value": "IsNLwK7bo1eyW8qUX+RZR60rFVaxQgQ6jguKM7dOmdo="
-      },
+      "address":"29B162D6C4310FBC6E82E5CA0293125AA250AA06",
+      "pub_key":{"type":"tendermint/PubKeyEd25519","value":"SXv/PvNgrMHZdmRNo9LJQsvfewLrluGdYdSuSZqW/A0="},
       "power": "10",
       "name": "Judd"
     },
