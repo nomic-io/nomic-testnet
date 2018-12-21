@@ -102,7 +102,7 @@ async function doDepositProcess(
   let depositUTXOs = await bitcoin.fetchUTXOs(intermediateBtcAddress)
   let depositAmount = depositUTXOs[0].value / 1e8
 
-  if (depositAmount < 20000) {
+  if (depositUTXOs[0].value < 20000) {
     spinner.fail('Deposit amount must be greater than .0002 Bitcoin')
     process.exit()
   }
