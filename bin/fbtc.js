@@ -43,11 +43,11 @@ async function main() {
   if (cmd === 'balance' && argv.length === 1) {
     console.log(`
 Your address: ${coinsWallet.address()}
-Your balance: ${await coinsWallet.balance()}`)
+Your balance: ${(await coinsWallet.balance()) * 1e8} pbtc`)
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
-    let amount = Number(argv[2])
+    let amount = Number(argv[2]) * 1e8
     try {
       let result = await coinsWallet.send(recipientCoinsAddress, amount)
       if (result.check_tx.code) {
@@ -76,7 +76,7 @@ Your balance: ${await coinsWallet.balance()}`)
     process.exit()
   } else if (cmd === 'withdraw' && argv.length === 3) {
     let recipientBtcAddress = argv[1]
-    let amount = Number(argv[2])
+    let amount = Number(argv[2]) * 1e8
 
     await doWithdrawProcess(coinsWallet, recipientBtcAddress, amount)
 
