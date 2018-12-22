@@ -43,7 +43,7 @@ async function main() {
   if (cmd === 'balance' && argv.length === 1) {
     console.log(`
 Your address: ${coinsWallet.address()}
-Your balance: ${(await coinsWallet.balance()) * 1e8} pbtc`)
+Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
