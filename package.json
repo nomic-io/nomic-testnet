@@ -24,7 +24,7 @@
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.1",
     "bitcoin-peg": "^1.1.2",
-    "bitcoin-protocol": "^4.0.1",
+    "bitcoin-protocol": "^4.1.0",
     "bitcoinjs-lib": "^4.0.2",
     "bs58check": "^2.1.2",
     "coins": "^4.2.0",
