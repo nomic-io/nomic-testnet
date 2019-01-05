@@ -213,6 +213,7 @@ function loadWallet(client) {
   let path = join(os.homedir(), '.coins')
   if (!fs.existsSync(path)) {
     privKey = generateSecpPrivateKey()
+    fs.writeFileSync(path, privKey.toString('hex'), 'utf8')
   } else {
     privKey = Buffer.from(fs.readFileSync(path, 'utf8'), 'hex')
   }
