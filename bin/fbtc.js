@@ -18,14 +18,14 @@ const TESTNET_GCI =
   '58bae8263f5ac4f1a3c93c2876538054fd8727d44504c30973a08ef82c64424b'
 
 const USAGE = `
-Usage: fbtc [command]
+Usage: pbtc [command]
 
   Commands:
 
-    balance                       Display your fbtc address and balance
+    balance                       Display your pbtc address and balance
     send      [address] [amount]  Send deposited coins to another address
     deposit                       Generate and display Bitcoin deposit address
-    withdraw  [address] [amount]  Withdraw fbtc to a Bitcoin address`
+    withdraw  [address] [amount]  Withdraw pbtc to a Bitcoin address`
 
 async function main() {
   if (argv.length === 0) {
