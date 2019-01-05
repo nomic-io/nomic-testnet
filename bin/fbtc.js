@@ -36,7 +36,7 @@ async function main() {
   let gci = process.env.gci || TESTNET_GCI
   let client = await connect(
     gci,
-    // { nodes: ['ws://178.128.180.171:26657', 'ws://138.197.129.73:1338'] }
+    { nodes: ['ws://178.128.180.171:26657', 'ws://138.197.129.73:1338'] }
   )
   let coinsWallet = loadWallet(client)
 
@@ -81,7 +81,7 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
 
     await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
 
-    process.exit()
+    process.exit(0)
   } else {
     console.log(USAGE)
     process.exit(1)
@@ -133,6 +133,7 @@ async function doDepositProcess(
   spinner3.succeed(`Deposit succeeded.`)
 
   let spinner4 = ora('Relaying deposit to peg network...').start()
+  txHash = bitcoin.getTxHash(depositTransaction)
   await relayDeposit(client, txHash)
   spinner4.succeed('Deposit relayed.')
 
@@ -181,7 +182,7 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
   }
   spinner2.succeed('Bitcoin transaction signed.')
 
-  let spinner3 = ora('Relaying transaction to Bitcoin network...')
+  let spinner3 = ora('Relaying transaction to Bitcoin network...').start()
   let tx = await buildDisbursalTransaction(signedTx, validators, signatories)
   await bitcoin.broadcastTx(tx)
   let withdrawalTxLink = `https://live.blockcypher.com/btc-testnet/tx/${tx.getId()}`
