@@ -23,10 +23,11 @@
   "dependencies": {
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.1",
-    "bitcoin-peg": "^1.1.2",
+    "bitcoin-peg": "^1.2.3",
     "bitcoin-protocol": "^4.1.0",
     "bitcoinjs-lib": "^4.0.2",
     "bs58check": "^2.1.2",
+    "chalk": "^2.4.1",
     "coins": "^4.2.0",
     "create-hash": "^1.2.0",
     "lotion": "^0.2.3",
