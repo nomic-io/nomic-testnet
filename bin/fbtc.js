@@ -11,6 +11,7 @@ let coins = require('coins')
 let connect = require('lotion-connect')
 let ora = require('ora')
 let bitcoin = require('../lib/bitcoin.js')
+let { relayDeposit, buildDisbursalTransaction } = require('bitcoin-peg').relay
 let base58 = require('bs58check')
 
 const TESTNET_GCI =
@@ -20,7 +21,7 @@ const USAGE = `
 Usage: fbtc [command]
 
   Commands:
-    
+
     balance                       Display your fbtc address and balance
     send      [address] [amount]  Send deposited coins to another address
     deposit                       Generate and display Bitcoin deposit address
@@ -29,7 +30,7 @@ Usage: fbtc [command]
 async function main() {
   if (argv.length === 0) {
     console.log(USAGE)
-    process.exit()
+    process.exit(1)
   }
 
   let gci = process.env.gci || TESTNET_GCI
@@ -78,12 +79,12 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
     let recipientBtcAddress = argv[1]
     let amount = Number(argv[2]) * 1e8
 
-    await doWithdrawProcess(coinsWallet, recipientBtcAddress, amount)
+    await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
 
-    process.exit()
+    process.exit(0)
   } else {
     console.log(USAGE)
-    process.exit()
+    process.exit(1)
   }
 }
 
@@ -118,49 +119,74 @@ async function doDepositProcess(
     depositUTXOs
   )
   await bitcoin.broadcastTx(depositTransaction)
-  let explorerLink = `https://live.blockcypher.com/btc-testnet/tx/${bitcoin
-    .getTxHash(depositTransaction)
+  let txHash = bitcoin.getTxHash(depositTransaction)
+  let explorerLink = `https://live.blockcypher.com/btc-testnet/tx/${txHash
+    .slice(0)
     .reverse()
     .toString('hex')}`
-  spinner2.succeed(`Deposit transaction relayed. ${explorerLink}`)
+  spinner2.succeed(`Deposit transaction broadcasted. ${explorerLink}`)
 
   let spinner3 = ora(
     'Waiting for Bitcoin miners to mine a block (this might take a while)...'
   ).start()
-  await bitcoin.waitForConfirmation()
+  await bitcoin.waitForConfirmation(txHash)
   spinner3.succeed(`Deposit succeeded.`)
+
+  let spinner4 = ora('Relaying deposit to peg network...').start()
+  txHash = bitcoin.getTxHash(depositTransaction)
+  await relayDeposit(client, txHash)
+  spinner4.succeed('Deposit relayed.')
 
   console.log('\n\nCheck your balance with:')
   console.log('$ pbtc balance')
 }
 
-async function doWithdrawProcess(coinsWallet, address, amount) {
+async function doWithdrawProcess(client, coinsWallet, address, amount) {
+  let { validators, signatories } = await getPeggingInfo(client)
+
   let spinner = ora('Broadcasting withdrawal transaction...').start()
+  let outputScript = bitcoin.createOutputScript(address)
   let res = await coinsWallet.send({
     type: 'bitcoin',
     amount,
-    script: bitcoin.createOutputScript(address)
+    script: outputScript
   })
 
-  if (!res.height) {
+  if (res.check_tx.code || res.deliver_tx.code) {
     spinner.fail('Invalid withdrawal transaction')
     console.log(res)
-    process.exit()
+    process.exit(1)
   }
 
   spinner.succeed('Broadcasted withdrawal transaction.')
 
   let spinner2 = ora(
-    'Waiting for signatories to build Bitcoin transaction...'
+    'Waiting for signatories to sign Bitcoin transaction...'
   ).start()
 
-  let utxos = await bitcoin.fetchUTXOs(address)
-  let withdrawalTxLink = `https://live.blockcypher.com/btc-testnet/tx/${utxos[0].txid
-    .reverse()
-    .toString('hex')}`
+  // wait for signatories to sign a transaction with our output in it
+  let signedTx
+  waitForSignatures: while (true) {
+    signedTx = await client.state.bitcoin.signedTx
+    if (signedTx == null) {
+      await sleep(500)
+      continue
+    }
 
-  spinner2.succeed(`Withdrawal succeeded. ${withdrawalTxLink}`)
-  return res
+    for (let output of signedTx.outputs) {
+      if (output.amount === amount && output.script.equals(outputScript)) {
+        break waitForSignatures
+      }
+    }
+    await sleep(500)
+  }
+  spinner2.succeed('Bitcoin transaction signed.')
+
+  let spinner3 = ora('Relaying transaction to Bitcoin network...').start()
+  let tx = await buildDisbursalTransaction(signedTx, validators, signatories)
+  await bitcoin.broadcastTx(tx)
+  let withdrawalTxLink = `https://live.blockcypher.com/btc-testnet/tx/${tx.getId()}`
+  spinner3.succeed(`Withdrawal succeeded. ${withdrawalTxLink}`)
 }
 
 async function getPeggingInfo(client) {
@@ -192,4 +218,8 @@ function loadWallet(client) {
   }
 
   return coins.wallet(privKey, client, { route: 'pbtc' })
+}
+
+function sleep (ms = 1000) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
