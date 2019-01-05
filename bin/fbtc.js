@@ -130,12 +130,12 @@ async function doDepositProcess(
     'Waiting for Bitcoin miners to mine a block (this might take a while)...'
   ).start()
   await bitcoin.waitForConfirmation(txHash)
-  spinner3.succeed(`Deposit succeeded.`)
+  spinner3.succeed(`Deposit transaction confirmed.`)
 
   let spinner4 = ora('Relaying deposit to peg network...').start()
   txHash = bitcoin.getTxHash(depositTransaction)
   await relayDeposit(client, txHash)
-  spinner4.succeed('Deposit relayed.')
+  spinner4.succeed('Deposit succeeded.')
 
   console.log('\n\nCheck your balance with:')
   console.log('$ pbtc balance')
