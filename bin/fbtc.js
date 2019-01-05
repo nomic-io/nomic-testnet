@@ -36,7 +36,7 @@ async function main() {
   let gci = process.env.gci || TESTNET_GCI
   let client = await connect(
     gci,
-    { nodes: ['ws://178.128.180.171:26657', 'ws://138.197.129.73:1338'] }
+    { nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'] }
   )
   let coinsWallet = loadWallet(client)
 
@@ -220,6 +220,6 @@ function loadWallet(client) {
   return coins.wallet(privKey, client, { route: 'pbtc' })
 }
 
-function sleep (ms = 1000) {
-  return new Promise((resolve) => setTimeout(resolve, ms))
+function sleep(ms = 1000) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
