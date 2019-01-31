@@ -11,7 +11,8 @@ let coins = require('coins')
 let connect = require('lotion-connect')
 let ora = require('ora')
 let bitcoin = require('../lib/bitcoin.js')
-let { relayDeposit, buildDisbursalTransaction } = require('bitcoin-peg').relay
+let peg = require('bitcoin-peg')
+let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
 
 const TESTNET_GCI =
@@ -111,13 +112,13 @@ async function doDepositProcess(
   let spinner2 = ora('Broadcasting deposit transaction...').start()
 
   // build intermediate address -> signatories transaction
-  let depositTransaction = bitcoin.createDepositTx(
-    depositPrivateKey,
+  let depositTransaction = peg.deposit.createTx(
     validators,
     signatories,
-    base58.decode(coinsWallet.address()),
-    depositUTXOs
+    depositUTXOs,
+    base58.decode(coinsWallet.address())
   )
+  depositTransaction = bitcoin.signTx(depositTransaction, depositPrivateKey)
   await bitcoin.broadcastTx(depositTransaction)
   let txHash = bitcoin.getTxHash(depositTransaction)
   let explorerLink = `https://live.blockcypher.com/btc-testnet/tx/${txHash
