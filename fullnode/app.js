@@ -27,15 +27,6 @@ const trustedHeader = {
   height: 1447488
 }
 
-// app.use(
-//   coins({
-//     initialBalances: {
-//       JvP4JbpiWUUFgDVfX2f36wgi1wjDnVwzu: 10000,
-//       '4C2tiCHRkdnC1VAwGowvG2CTQr5kReJ3y': 10000
-//     }
-//   })
-// )
-
 app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
 
 app.use(
