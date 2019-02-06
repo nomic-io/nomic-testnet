@@ -89,7 +89,10 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
   }
 }
 
-main()
+main().catch((err) => {
+  console.error('ERROR:', err.stack)
+  process.exit(1)
+})
 
 async function doDepositProcess(
   depositPrivateKey,
