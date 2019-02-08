@@ -1,6 +1,6 @@
 {
   "name": "pbtc",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "Pegged bitcoin proof-of-stake sidechain cli wallet",
   "bin": {
     "pbtc": "bin/fbtc.js"
