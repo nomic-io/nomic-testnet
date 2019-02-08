@@ -28,7 +28,8 @@ app.use(
   coins({
     handlers: {
       bitcoin: bitcoinPeg.coinsHandler('bitcoin')
-    }
+    },
+    minFee: 50
   })
 )
 
