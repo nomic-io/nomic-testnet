@@ -31,8 +31,9 @@
     "coins": "^4.2.1",
     "create-hash": "^1.2.0",
     "lotion": "^0.4.2",
-    "lotion-connect": "^0.1.12",
+    "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
+    "tendermint": "^3.4.1",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
   }
