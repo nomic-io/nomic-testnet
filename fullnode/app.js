@@ -12,19 +12,13 @@ let app = lotion({
 })
 
 const trustedHeader = {
-  version: 1073733632,
-  prevHash: Buffer.from(
-    '0000000000000113d4262419a8aa3a4fe928c0ea81893a2d2ffee5258b2085d8',
-    'hex'
-  ).reverse(),
-  merkleRoot: Buffer.from(
-    'baa3bb3f4fb663bf6974831ff3d2c37479f471f1558447dfae92f146539f7d9f',
-    'hex'
-  ).reverse(),
-  timestamp: 1544602833,
-  bits: 0x1a015269,
-  nonce: 3714016562,
-  height: 1447488
+  version: 1073676288,
+  prevHash: Buffer.from('c28aaf47e2574db86bc2daf2a10e38d52f738ad02f00f203e900000000000000', 'hex'),
+  merkleRoot: Buffer.from('bea48abbc1ab99fd497c24209730aac7db267e4f2d6cb1977656c91da2b7d282', 'hex'),
+  timestamp: 1549280514,
+  bits: 436283074,
+  nonce: 3607464172,
+  height: 1455552
 }
 
 app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
