@@ -51,7 +51,10 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
     let recipientCoinsAddress = argv[1]
     let amount = parseBtcAmount(argv[2])
     try {
-      let result = await coinsWallet.send(recipientCoinsAddress, amount)
+      let result = await coinsWallet.send([
+        { address: recipientCoinsAddress, amount },
+        { type: 'fee', amount: 50 }
+      ])
       if (result.check_tx.code) {
         throw new Error(result.check_tx.log)
       }
@@ -152,11 +155,17 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
 
   let spinner = ora('Broadcasting withdrawal transaction...').start()
   let outputScript = bitcoin.createOutputScript(address)
-  let res = await coinsWallet.send({
-    type: 'bitcoin',
-    amount,
-    script: outputScript
-  })
+  let res = await coinsWallet.send([
+    {
+      type: 'bitcoin',
+      amount,
+      script: outputScript
+    },
+    {
+      type: 'fee',
+      amount: 50
+    }
+  ])
 
   if (res.check_tx.code || res.deliver_tx.code) {
     spinner.fail('Invalid withdrawal transaction')
