@@ -49,7 +49,7 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
-    let amount = Number(argv[2]) * 1e8
+    let amount = parseBtcAmount(argv[2])
     try {
       let result = await coinsWallet.send(recipientCoinsAddress, amount)
       if (result.check_tx.code) {
@@ -79,7 +79,7 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
     process.exit()
   } else if (cmd === 'withdraw' && argv.length === 3) {
     let recipientBtcAddress = argv[1]
-    let amount = Number(argv[2]) * 1e8
+    let amount = parseBtcAmount(argv[2])
 
     await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
 
@@ -233,4 +233,8 @@ function sha256(data) {
 
 function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function parseBtcAmount (str) {
+  return Math.round(Number(str) * 1e8)
 }
