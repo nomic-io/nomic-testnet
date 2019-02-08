@@ -23,7 +23,7 @@
   "dependencies": {
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.2",
-    "bitcoin-peg": "^1.4.0",
+    "bitcoin-peg": "^1.4.2",
     "bitcoin-protocol": "^4.1.0",
     "bitcoinjs-lib": "^4.0.2",
     "bs58check": "^2.1.2",
@@ -33,6 +33,7 @@
     "lotion": "^0.4.2",
     "lotion-connect": "^0.1.12",
     "ora": "^3.0.0",
+    "webcoin": "^3.0.2",
     "webcoin-bitcoin-testnet": "^1.1.1"
   }
 }

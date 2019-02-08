@@ -5,7 +5,7 @@ let argv = process.argv.slice(2)
 let os = require('os')
 let fs = require('fs')
 let { join } = require('path')
-let { randomBytes } = require('crypto')
+let { randomBytes, createHash } = require('crypto')
 let secp256k1 = require('secp256k1')
 let coins = require('coins')
 let connect = require('lotion-connect')
@@ -64,14 +64,15 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
       process.exit(1)
     }
   } else if (cmd === 'deposit' && argv.length === 1) {
-    let depositPrivateKey = generateSecpPrivateKey()
-    let btcDepositAddress = bitcoin.deriveBtcAddress(depositPrivateKey)
+    let depositPrivateKey = sha256(coinsWallet.privkey)
+    let p2pkh = bitcoin.deriveP2pkh(depositPrivateKey)
+    let btcDepositAddress = p2pkh.address
 
     console.log(`Deposit address: ${btcDepositAddress}\n`)
     // change it to a check mark
     await doDepositProcess(
       depositPrivateKey,
-      btcDepositAddress,
+      p2pkh,
       client,
       coinsWallet
     )
@@ -96,15 +97,16 @@ main().catch((err) => {
 
 async function doDepositProcess(
   depositPrivateKey,
-  intermediateBtcAddress,
+  p2pkh,
   client,
   coinsWallet
 ) {
-  let spinner = ora(`Waiting for deposit...`).start()
   // get validators and signatory keys
   let { validators, signatories } = await getPeggingInfo(client)
+
+  let spinner = ora(`Waiting for deposit...`).start()
   // wait for a deposit to the intermediate btc address
-  let depositUTXOs = await bitcoin.fetchUTXOs(intermediateBtcAddress)
+  let depositUTXOs = await bitcoin.fetchUTXOs(p2pkh)
   let depositAmount = depositUTXOs[0].value / 1e8
 
   if (depositUTXOs[0].value < 20000) {
@@ -223,6 +225,10 @@ function loadWallet(client) {
   }
 
   return coins.wallet(privKey, client, { route: 'pbtc' })
+}
+
+function sha256(data) {
+  return createHash('sha256').update(data).digest()
 }
 
 function sleep(ms = 1000) {
