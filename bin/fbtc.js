@@ -4,7 +4,7 @@ let argv = process.argv.slice(2)
 
 let os = require('os')
 let fs = require('fs')
-let { join } = require('path')
+let { join, basename } = require('path')
 let { randomBytes, createHash } = require('crypto')
 let secp256k1 = require('secp256k1')
 let coins = require('coins')
@@ -14,19 +14,25 @@ let bitcoin = require('../lib/bitcoin.js')
 let peg = require('bitcoin-peg')
 let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
+let { bold, cyan, red } = require('chalk')
+
+const CMD = basename(process.argv[1])
 
 const TESTNET_GCI =
   '58bae8263f5ac4f1a3c93c2876538054fd8727d44504c30973a08ef82c64424b'
 
+const SYMBOL = 'NBTC'
+
 const USAGE = `
-Usage: pbtc [command]
+Usage: ${CMD} [command]
 
   Commands:
 
-    balance                       Display your pbtc address and balance
+    balance                       Display your ${SYMBOL} address and balance
     send      [address] [amount]  Send deposited coins to another address
     deposit                       Generate and display Bitcoin deposit address
-    withdraw  [address] [amount]  Withdraw pbtc to a Bitcoin address`
+    withdraw  [address] [amount]  Withdraw ${SYMBOL} to a Bitcoin address
+`
 
 async function main() {
   if (argv.length === 0) {
@@ -37,15 +43,15 @@ async function main() {
   let gci = process.env.gci || TESTNET_GCI
   let client = await connect(
     gci,
-    { nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'] }
+    { nodes: ['ws://pbtc.mappum.com:1338'] }
   )
   let coinsWallet = loadWallet(client)
 
   let cmd = argv[0]
   if (cmd === 'balance' && argv.length === 1) {
     console.log(`
-Your address: ${coinsWallet.address()}
-Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
+${bold('YOUR ADDRESS:')} ${cyan(coinsWallet.address())}
+${bold('YOUR BALANCE:')} ${cyan((await coinsWallet.balance()) / 1e8)} ${SYMBOL}`)
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
@@ -71,7 +77,12 @@ Your balance: ${(await coinsWallet.balance()) / 1e8} pbtc`)
     let p2pkh = bitcoin.deriveP2pkh(depositPrivateKey)
     let btcDepositAddress = p2pkh.address
 
-    console.log(`Deposit address: ${btcDepositAddress}\n`)
+    console.log(`
+${bold('YOUR BITCOIN TESTNET DEPOSIT ADDRESS:')}
+${cyan(btcDepositAddress)}
+
+Send BTC to this address and it will be transferred to your account on the sidechain.
+`)
     // change it to a check mark
     await doDepositProcess(
       depositPrivateKey,
@@ -113,10 +124,11 @@ async function doDepositProcess(
   let depositAmount = depositUTXOs[0].value / 1e8
 
   if (depositUTXOs[0].value < 20000) {
-    spinner.fail('Deposit amount must be greater than .0002 Bitcoin')
-    process.exit()
+    spinner.fail(red('Deposit amount must be greater than 0.0002 BTC'))
+    process.exit(1)
   }
-  spinner.succeed(`Detected incoming deposit of ${depositAmount} Bitcoin.`)
+
+  spinner.succeed(`Detected incoming deposit of ${cyan(depositAmount)} BTC`)
   let spinner2 = ora('Broadcasting deposit transaction...').start()
 
   // build intermediate address -> signatories transaction
@@ -133,28 +145,35 @@ async function doDepositProcess(
     .slice(0)
     .reverse()
     .toString('hex')}`
-  spinner2.succeed(`Deposit transaction broadcasted. ${explorerLink}`)
+  spinner2.succeed(`Deposit transaction broadcasted: ${cyan(explorerLink)}`)
 
   let spinner3 = ora(
     'Waiting for Bitcoin miners to mine a block (this might take a while)...'
   ).start()
   await bitcoin.waitForConfirmation(txHash)
-  spinner3.succeed(`Deposit transaction confirmed.`)
+  spinner3.succeed(`Deposit transaction confirmed`)
 
   let spinner4 = ora('Relaying deposit to peg network...').start()
   txHash = bitcoin.getTxHash(depositTransaction)
   await relayDeposit(client, txHash)
-  spinner4.succeed('Deposit succeeded.')
+  spinner4.succeed('Deposit succeeded')
 
-  console.log('\n\nCheck your balance with:')
-  console.log('$ pbtc balance')
+  console.log(bold('\n\nCheck your balance with:'))
+  console.log(`$ ${CMD} balance`)
 }
 
 async function doWithdrawProcess(client, coinsWallet, address, amount) {
   let { validators, signatories } = await getPeggingInfo(client)
 
   let spinner = ora('Broadcasting withdrawal transaction...').start()
-  let outputScript = bitcoin.createOutputScript(address)
+  let outputScript
+  try {
+    outputScript = bitcoin.createOutputScript(address)
+  } catch (err) {
+    spinner.fail(red('Invalid Bitcoin testnet address'))
+    process.exit(1)
+  }
+
   let res = await coinsWallet.send([
     {
       type: 'bitcoin',
@@ -168,12 +187,12 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
   ])
 
   if (res.check_tx.code || res.deliver_tx.code) {
-    spinner.fail('Invalid withdrawal transaction')
+    spinner.fail(red('Invalid withdrawal transaction'))
     console.log(res)
     process.exit(1)
   }
 
-  spinner.succeed('Broadcasted withdrawal transaction.')
+  spinner.succeed('Broadcasted withdrawal transaction')
 
   let spinner2 = ora(
     'Waiting for signatories to sign Bitcoin transaction...'
@@ -195,13 +214,13 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
     }
     await sleep(500)
   }
-  spinner2.succeed('Bitcoin transaction signed.')
+  spinner2.succeed('Bitcoin transaction signed')
 
   let spinner3 = ora('Relaying transaction to Bitcoin network...').start()
   let tx = await buildDisbursalTransaction(signedTx, validators, signatories)
   await bitcoin.broadcastTx(tx)
   let withdrawalTxLink = `https://live.blockcypher.com/btc-testnet/tx/${tx.getId()}`
-  spinner3.succeed(`Withdrawal succeeded. ${withdrawalTxLink}`)
+  spinner3.succeed(`Withdrawal succeeded: ${cyan(withdrawalTxLink)}`)
 }
 
 async function getPeggingInfo(client) {
