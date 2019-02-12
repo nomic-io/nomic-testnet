@@ -1,9 +1,9 @@
 {
-  "name": "pbtc",
-  "version": "0.0.23",
+  "name": "nomic-testnet",
+  "version": "0.0.0",
   "description": "Pegged bitcoin proof-of-stake sidechain cli wallet",
   "bin": {
-    "pbtc": "bin/fbtc.js"
+    "nbtc": "bin/fbtc.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
