@@ -66,5 +66,5 @@ function startWatchdog (rpcPort) {
       console.error('failed to GET /status from RPC')
       process.exit(1)
     })
-  }, 15 * 60 * 1000)
+  }, 2 * 60 * 1000)
 }
