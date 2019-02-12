@@ -101,24 +101,26 @@ Send BTC to this address and it will be transferred to your account on the sidec
 
     process.exit(0)
   } else if (cmd === 'deploy' && argv.length === 3) {
-    contracts.deploy(coinsWallet, argv[1], Number(argv[2]))
+    let { contractAddress, result } = await contracts.deploy(
+      coinsWallet,
+      argv[1],
+      Number(argv[2])
+    )
+
+    console.log(result)
+    console.log('\n\n\nContract address: ' + contractAddress)
   } else {
     console.log(USAGE)
     process.exit(1)
   }
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error('ERROR:', err.stack)
   process.exit(1)
 })
 
-async function doDepositProcess(
-  depositPrivateKey,
-  p2pkh,
-  client,
-  coinsWallet
-) {
+async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
   // get validators and signatory keys
   let { validators, signatories } = await getPeggingInfo(client)
 
