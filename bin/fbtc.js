@@ -11,6 +11,7 @@ let coins = require('coins')
 let connect = require('lotion-connect')
 let ora = require('ora')
 let bitcoin = require('../lib/bitcoin.js')
+let contracts = require('../lib/contracts.js')
 let peg = require('bitcoin-peg')
 let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
@@ -32,6 +33,7 @@ Usage: ${CMD} [command]
     send      [address] [amount]  Send deposited coins to another address
     deposit                       Generate and display Bitcoin deposit address
     withdraw  [address] [amount]  Withdraw ${SYMBOL} to a Bitcoin address
+    deploy    [path] [endowment]  Compile and deploy an AssemblyScript contract
 `
 
 async function main() {
@@ -43,7 +45,7 @@ async function main() {
   let gci = process.env.gci || TESTNET_GCI
   let client = await connect(
     gci,
-    { nodes: ['ws://pbtc.mappum.com:1338'] }
+    { nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'] }
   )
   let coinsWallet = loadWallet(client)
 
@@ -98,6 +100,8 @@ Send BTC to this address and it will be transferred to your account on the sidec
     await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
 
     process.exit(0)
+  } else if (cmd === 'deploy' && argv.length === 3) {
+    contracts.deploy(coinsWallet, argv[1], Number(argv[2]))
   } else {
     console.log(USAGE)
     process.exit(1)

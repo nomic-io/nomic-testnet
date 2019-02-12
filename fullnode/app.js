@@ -3,6 +3,7 @@ let bitcoinPeg = require('bitcoin-peg')
 let coins = require('coins')
 let fs = require('fs')
 let { get } = require('axios')
+let { coinsHandler } = require('wasm-contracts')
 
 let app = lotion({
   genesisPath: './genesis.json',
@@ -28,7 +29,8 @@ app.use(
   'pbtc',
   coins({
     handlers: {
-      bitcoin: bitcoinPeg.coinsHandler('bitcoin')
+      bitcoin: bitcoinPeg.coinsHandler('bitcoin'),
+      contract: coinsHandler()
     },
     minFee: 50
   })
