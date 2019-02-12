@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/nomic-io/fbtc#readme",
   "dependencies": {
+    "axios": "^0.18.0",
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.2",
     "bitcoin-peg": "^1.4.3",

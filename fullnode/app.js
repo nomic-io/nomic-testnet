@@ -2,6 +2,7 @@ let lotion = require('lotion')
 let bitcoinPeg = require('bitcoin-peg')
 let coins = require('coins')
 let fs = require('fs')
+let { get } = require('axios')
 
 let app = lotion({
   genesisPath: './genesis.json',
@@ -36,6 +37,8 @@ app.use(
 async function main() {
   let appInfo = await app.start()
   console.log(appInfo)
+
+  startWatchdog(appInfo.ports.rpc)
 }
 
 process.on('unhandledRejection', e => {
@@ -47,4 +50,19 @@ process.on('uncaughtException', e => {
   console.log(e)
 })
 
-main()
+main().catch((err) => {
+  console.error(err.stack)
+  process.exit(1)
+})
+
+function startWatchdog (rpcPort) {
+  // kills process if the RPC is hanging
+  setInterval(() => {
+    get(`http://localhost:${rpcPort}/status`, {
+      timeout: 10 * 1000
+    }).catch((err) => {
+      console.error('failed to GET /status from RPC')
+      process.exit(1)
+    })
+  }, 15 * 60 * 1000)
+}
