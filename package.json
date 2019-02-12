@@ -24,7 +24,7 @@
     "axios": "^0.18.0",
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.2",
-    "bitcoin-peg": "^1.4.3",
+    "bitcoin-peg": "^1.4.4",
     "bitcoin-protocol": "^4.1.0",
     "bitcoinjs-lib": "^4.0.2",
     "bs58check": "^2.1.2",
