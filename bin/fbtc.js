@@ -109,6 +109,8 @@ Send BTC to this address and it will be transferred to your account on the sidec
 
     console.log(result)
     console.log('\n\n\nContract address: ' + contractAddress)
+
+    process.exit()
   } else {
     console.log(USAGE)
     process.exit(1)
