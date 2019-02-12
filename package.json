@@ -35,7 +35,7 @@
     "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
     "tendermint": "^3.4.1",
-    "wasm-contracts": "0.0.2",
+    "wasm-contracts": "0.0.4",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
   }
