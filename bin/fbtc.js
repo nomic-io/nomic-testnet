@@ -121,10 +121,11 @@ async function doDepositProcess(
   let spinner = ora(`Waiting for deposit...`).start()
   // wait for a deposit to the intermediate btc address
   let depositUTXOs = await bitcoin.fetchUTXOs(p2pkh)
-  let depositAmount = depositUTXOs[0].value / 1e8
+  let sum = depositUTXOs.reduce((sum, utxo) => sum + utxo.value, 0)
+  let depositAmount = sum / 1e8
 
-  if (depositUTXOs[0].value < 20000) {
-    spinner.fail(red('Deposit amount must be greater than 0.0002 BTC'))
+  if (sum < 20000) {
+    spinner.fail(red('Deposit amount must be at least 0.0002 BTC'))
     process.exit(1)
   }
 
@@ -146,6 +147,12 @@ async function doDepositProcess(
     .reverse()
     .toString('hex')}`
   spinner2.succeed(`Deposit transaction broadcasted: ${cyan(explorerLink)}`)
+
+  process.on('exit', (code) => {
+    if (code === 0) return
+    console.log(red(`An error occurred.\nDon't worry, your deposit is still going through.\nThe coins should show up in your wallet in a few minutes, check your balance with ${cyan('`nbtc balance`')}.`))
+    process.exit(1)
+  })
 
   let spinner3 = ora(
     'Waiting for Bitcoin miners to mine a block (this might take a while)...'
