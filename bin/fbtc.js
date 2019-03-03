@@ -43,7 +43,10 @@ async function main() {
   let gci = process.env.gci || TESTNET_GCI
   let client = await connect(
     gci,
-    { nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'] }
+    {
+      nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'],
+      genesis: require('./genesis.json')
+    }
   )
   let coinsWallet = loadWallet(client)
 

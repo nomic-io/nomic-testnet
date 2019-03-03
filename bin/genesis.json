@@ -1,0 +1,31 @@
+{
+  "genesis_time": "2018-11-29T00:43:26.525548031Z",
+  "chain_id": "coins-test",
+  "consensus_params": {
+    "block_size_params": {
+      "max_bytes": "22020096",
+      "max_gas": "-1"
+    },
+    "evidence_params": {
+      "max_age": "100000"
+    }
+  },
+  "validators": [
+    {
+      "address":"29B162D6C4310FBC6E82E5CA0293125AA250AA06",
+      "pub_key":{"type":"tendermint/PubKeyEd25519","value":"SXv/PvNgrMHZdmRNo9LJQsvfewLrluGdYdSuSZqW/A0="},
+      "power": "10",
+      "name": "Judd"
+    },
+    {
+      "address": "893133474223BA13B46DD29943ECB3071C655AC4",
+      "pub_key": {
+        "type": "tendermint/PubKeyEd25519",
+        "value": "TKv4vdu6W+bJRWXGIAyzomBMT6OOXioFX5ME1GAbR2w="
+      },
+      "power": "10",
+      "name": "Matt"
+    }
+  ],
+  "app_hash": ""
+}
