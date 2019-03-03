@@ -9,7 +9,8 @@ let app = lotion({
   keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
   p2pPort: 1337,
   rpcPort: 1338,
-  peers: []
+  peers: [],
+  discovery: false
 })
 
 const trustedHeader = {
