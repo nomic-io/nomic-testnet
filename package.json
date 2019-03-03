@@ -1,6 +1,6 @@
 {
   "name": "nomic-testnet",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Pegged bitcoin proof-of-stake sidechain cli wallet",
   "bin": {
     "nbtc": "bin/fbtc.js"
