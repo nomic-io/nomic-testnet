@@ -19,7 +19,7 @@ let { bold, cyan, red } = require('chalk')
 const CMD = basename(process.argv[1])
 
 const TESTNET_GCI =
-  '58bae8263f5ac4f1a3c93c2876538054fd8727d44504c30973a08ef82c64424b'
+  '11eb149f2057bd490b91479ef46850185900056155ea927ef7fe48795f16035d'
 
 const SYMBOL = 'NBTC'
 
@@ -32,6 +32,7 @@ Usage: ${CMD} [command]
     send      [address] [amount]  Send deposited coins to another address
     deposit                       Generate and display Bitcoin deposit address
     withdraw  [address] [amount]  Withdraw ${SYMBOL} to a Bitcoin address
+    deploy    [path]    [amount]  Deploy a contract and endow it with ${SYMBOL}
 `
 
 async function main() {
@@ -41,20 +42,16 @@ async function main() {
   }
 
   let gci = process.env.gci || TESTNET_GCI
-  let client = await connect(
-    gci,
-    {
-      nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'],
-      genesis: require('./genesis.json')
-    }
-  )
+  let client = await connect(gci)
   let coinsWallet = loadWallet(client)
 
   let cmd = argv[0]
   if (cmd === 'balance' && argv.length === 1) {
     console.log(`
 ${bold('YOUR ADDRESS:')} ${cyan(coinsWallet.address())}
-${bold('YOUR BALANCE:')} ${cyan((await coinsWallet.balance()) / 1e8)} ${SYMBOL}`)
+${bold('YOUR BALANCE:')} ${cyan(
+      (await coinsWallet.balance()) / 1e8
+    )} ${SYMBOL}`)
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
@@ -87,12 +84,7 @@ ${cyan(btcDepositAddress)}
 Send BTC to this address and it will be transferred to your account on the sidechain.
 `)
     // change it to a check mark
-    await doDepositProcess(
-      depositPrivateKey,
-      p2pkh,
-      client,
-      coinsWallet
-    )
+    await doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet)
     process.exit()
   } else if (cmd === 'withdraw' && argv.length === 3) {
     let recipientBtcAddress = argv[1]
@@ -107,17 +99,12 @@ Send BTC to this address and it will be transferred to your account on the sidec
   }
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error('ERROR:', err.stack)
   process.exit(1)
 })
 
-async function doDepositProcess(
-  depositPrivateKey,
-  p2pkh,
-  client,
-  coinsWallet
-) {
+async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
   // get validators and signatory keys
   let { validators, signatories } = await getPeggingInfo(client)
 
@@ -151,9 +138,15 @@ async function doDepositProcess(
     .toString('hex')}`
   spinner2.succeed(`Deposit transaction broadcasted: ${cyan(explorerLink)}`)
 
-  process.on('exit', (code) => {
+  process.on('exit', code => {
     if (code === 0) return
-    console.log(red(`An error occurred.\nDon't worry, your deposit is still going through.\nThe coins should show up in your wallet in a few minutes, check your balance with ${cyan('`nbtc balance`')}.`))
+    console.log(
+      red(
+        `An error occurred.\nDon't worry, your deposit is still going through.\nThe coins should show up in your wallet in a few minutes, check your balance with ${cyan(
+          '`nbtc balance`'
+        )}.`
+      )
+    )
     process.exit(1)
   })
 
@@ -266,13 +259,15 @@ function loadWallet(client) {
 }
 
 function sha256(data) {
-  return createHash('sha256').update(data).digest()
+  return createHash('sha256')
+    .update(data)
+    .digest()
 }
 
 function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function parseBtcAmount (str) {
+function parseBtcAmount(str) {
   return Math.round(Number(str) * 1e8)
 }

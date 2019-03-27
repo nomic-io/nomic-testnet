@@ -5,18 +5,24 @@ let fs = require('fs')
 let { get } = require('axios')
 
 let app = lotion({
-  genesisPath: './genesis.json',
-  keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
+  genesisPath: './dev-genesis.json',
+  keyPath: './dev-privkey.json',
   p2pPort: 1337,
   rpcPort: 1338,
   peers: [],
-  discovery: false
+  discovery: true
 })
 
 const trustedHeader = {
   version: 1073676288,
-  prevHash: Buffer.from('c28aaf47e2574db86bc2daf2a10e38d52f738ad02f00f203e900000000000000', 'hex'),
-  merkleRoot: Buffer.from('bea48abbc1ab99fd497c24209730aac7db267e4f2d6cb1977656c91da2b7d282', 'hex'),
+  prevHash: Buffer.from(
+    'c28aaf47e2574db86bc2daf2a10e38d52f738ad02f00f203e900000000000000',
+    'hex'
+  ),
+  merkleRoot: Buffer.from(
+    'bea48abbc1ab99fd497c24209730aac7db267e4f2d6cb1977656c91da2b7d282',
+    'hex'
+  ),
   timestamp: 1549280514,
   bits: 436283074,
   nonce: 3607464172,
@@ -51,17 +57,17 @@ process.on('uncaughtException', e => {
   console.log(e)
 })
 
-main().catch((err) => {
+main().catch(err => {
   console.error(err.stack)
   process.exit(1)
 })
 
-function startWatchdog (rpcPort) {
+function startWatchdog(rpcPort) {
   // kills process if the RPC is hanging
   setInterval(() => {
     get(`http://localhost:${rpcPort}/status`, {
       timeout: 10 * 1000
-    }).catch((err) => {
+    }).catch(err => {
       console.error('failed to GET /status from RPC')
       process.exit(1)
     })
