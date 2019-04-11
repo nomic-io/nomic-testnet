@@ -1,9 +1,9 @@
 {
-  "name": "nomic-testnet",
-  "version": "0.0.3",
+  "name": "nomic-cli",
+  "version": "0.0.4",
   "description": "Pegged bitcoin proof-of-stake sidechain cli wallet",
   "bin": {
-    "nbtc": "bin/fbtc.js"
+    "nomic": "bin/nomic-cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -35,7 +35,11 @@
     "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
     "tendermint": "^3.4.1",
+    "web8": "0.0.9",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
+  },
+  "devDependencies": {
+    "lotion-contracts": "0.0.1"
   }
 }

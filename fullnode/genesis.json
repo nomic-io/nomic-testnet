@@ -1,6 +1,6 @@
 {
-  "genesis_time": "2018-11-29T00:43:26.525548031Z",
-  "chain_id": "coins-test",
+  "genesis_time": "2019-04-03T08:55:56.131309565Z",
+  "chain_id": "nomic-v0.0.2",
   "consensus_params": {
     "block_size_params": {
       "max_bytes": "22020096",
@@ -12,19 +12,13 @@
   },
   "validators": [
     {
-      "address":"29B162D6C4310FBC6E82E5CA0293125AA250AA06",
-      "pub_key":{"type":"tendermint/PubKeyEd25519","value":"SXv/PvNgrMHZdmRNo9LJQsvfewLrluGdYdSuSZqW/A0="},
-      "power": "10",
-      "name": "Judd"
-    },
-    {
-      "address": "893133474223BA13B46DD29943ECB3071C655AC4",
+      "address": "AB2312824CCEABA631C63E8218C2BDC2FA6CBF18",
       "pub_key": {
         "type": "tendermint/PubKeyEd25519",
-        "value": "TKv4vdu6W+bJRWXGIAyzomBMT6OOXioFX5ME1GAbR2w="
+        "value": "I6uNFIqa8EZKaBvYWvw+BKwhfQ0h3Ioqmm7y+HV/c4U="
       },
       "power": "10",
-      "name": "Matt"
+      "name": ""
     }
   ],
   "app_hash": ""

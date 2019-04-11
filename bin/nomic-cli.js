@@ -15,11 +15,12 @@ let peg = require('bitcoin-peg')
 let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
 let { bold, cyan, red } = require('chalk')
+let Web8 = require('web8')
 
 const CMD = basename(process.argv[1])
 
 const TESTNET_GCI =
-  '11eb149f2057bd490b91479ef46850185900056155ea927ef7fe48795f16035d'
+  '4288a3cfd6928dd67564b1448db47efc9e87bfe7bc7b96f05353e47e9d422ca5'
 
 const SYMBOL = 'NBTC'
 
@@ -42,8 +43,15 @@ async function main() {
   }
 
   let gci = process.env.gci || TESTNET_GCI
-  let client = await connect(gci)
+  let client = await connect(
+    gci,
+    {
+      nodes: ['ws://134.209.50.224:1338'],
+      genesis: require('./genesis.json')
+    }
+  )
   let coinsWallet = loadWallet(client)
+  let web8 = await Web8()
 
   let cmd = argv[0]
   if (cmd === 'balance' && argv.length === 1) {
@@ -91,8 +99,12 @@ Send BTC to this address and it will be transferred to your account on the sidec
     let amount = parseBtcAmount(argv[2])
 
     await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
-
     process.exit(0)
+  } else if (cmd === 'deploy' && argv.length === 3) {
+    let contractPath = argv[1]
+    let amount = parseBtcAmount(argv[2])
+    await doDeployProcess(web8, contractPath, amount)
+    process.exit()
   } else {
     console.log(USAGE)
     process.exit(1)
@@ -224,6 +236,15 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
   await bitcoin.broadcastTx(tx)
   let withdrawalTxLink = `https://live.blockcypher.com/btc-testnet/tx/${tx.getId()}`
   spinner3.succeed(`Withdrawal succeeded: ${cyan(withdrawalTxLink)}`)
+}
+
+async function doDeployProcess(web8, contractPath, amount) {
+  let spinner = ora('Deploying contract...').start()
+  let code = fs.readFileSync(contractPath).toString()
+  let result = await web8.createContract({ code, endowment: amount })
+  spinner.succeed('Deployed contract successfully.')
+
+  console.log('\n\nContract address: ' + bold(result.contractAddress))
 }
 
 async function getPeggingInfo(client) {

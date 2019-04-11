@@ -1,32 +1,33 @@
 let lotion = require('lotion')
 let bitcoinPeg = require('bitcoin-peg')
+let contracts = require('lotion-contracts')
 let coins = require('coins')
 let fs = require('fs')
 let { get } = require('axios')
 
 let app = lotion({
-  genesisPath: './dev-genesis.json',
-  keyPath: './dev-privkey.json',
+  genesisPath: './genesis.json',
+  keyPath: 'privkey.json',
   p2pPort: 1337,
   rpcPort: 1338,
   peers: [],
-  discovery: true
+  discovery: false
 })
 
 const trustedHeader = {
   version: 1073676288,
   prevHash: Buffer.from(
-    'c28aaf47e2574db86bc2daf2a10e38d52f738ad02f00f203e900000000000000',
+    'a82fd47f65fc74d5ff947c71991c9cc4253ef7cd01e62dd6a700000000000000',
     'hex'
   ),
   merkleRoot: Buffer.from(
-    'bea48abbc1ab99fd497c24209730aac7db267e4f2d6cb1977656c91da2b7d282',
+    '07e9687977173526285defcdcc92f57defea0bd2b5236711f04565cf44daf454',
     'hex'
   ),
-  timestamp: 1549280514,
-  bits: 436283074,
-  nonce: 3607464172,
-  height: 1455552
+  timestamp: 1553416509,
+  bits: 436286314,
+  nonce: 2223907393,
+  height: 1485792
 }
 
 app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
@@ -34,8 +35,13 @@ app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
 app.use(
   'pbtc',
   coins({
+    initialBalances: {
+      '4C2tiCHRkdnC1VAwGowvG2CTQr5kReJ3y': 1e9,
+      H7JKepgrCSXecWFGKsToRKkzofpynZfnx: 1e9
+    },
     handlers: {
-      bitcoin: bitcoinPeg.coinsHandler('bitcoin')
+      bitcoin: bitcoinPeg.coinsHandler('bitcoin'),
+      contract: contracts()
     },
     minFee: 50
   })

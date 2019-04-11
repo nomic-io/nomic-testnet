@@ -1,6 +1,6 @@
 {
-  "genesis_time": "2019-04-03T08:55:56.131309565Z",
-  "chain_id": "nomic-v0.0.2",
+  "genesis_time": "2019-01-27T20:59:51.03020916Z",
+  "chain_id": "panache",
   "consensus_params": {
     "block_size_params": {
       "max_bytes": "22020096",
@@ -12,10 +12,10 @@
   },
   "validators": [
     {
-      "address": "AB2312824CCEABA631C63E8218C2BDC2FA6CBF18",
+      "address": "7054961F0E72BCBE9639D97C4C13BA6C802C12D5",
       "pub_key": {
         "type": "tendermint/PubKeyEd25519",
-        "value": "I6uNFIqa8EZKaBvYWvw+BKwhfQ0h3Ioqmm7y+HV/c4U="
+        "value": "dR4XM7xsLsqD1bKw4y7rdmOukhgsB3AZUYxImK1VjKc="
       },
       "power": "10",
       "name": ""
