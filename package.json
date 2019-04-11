@@ -40,6 +40,6 @@
     "webcoin-bitcoin-testnet": "^1.1.1"
   },
   "devDependencies": {
-    "lotion-contracts": "0.0.1"
+    "lotion-contracts": "0.0.3"
   }
 }
