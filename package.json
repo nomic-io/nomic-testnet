@@ -1,6 +1,6 @@
 {
   "name": "nomic-cli",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Pegged bitcoin proof-of-stake sidechain cli wallet",
   "bin": {
     "nomic": "bin/nomic-cli.js"
