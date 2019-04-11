@@ -35,11 +35,11 @@
     "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
     "tendermint": "^3.4.1",
-    "web8": "0.0.13",
+    "web8": "0.0.14",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
   },
   "devDependencies": {
-    "lotion-contracts": "0.0.4"
+    "lotion-contracts": "0.0.5"
   }
 }
