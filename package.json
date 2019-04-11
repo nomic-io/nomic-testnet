@@ -24,7 +24,7 @@
     "axios": "^0.18.0",
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.2",
-    "bitcoin-peg": "^1.4.4",
+    "bitcoin-peg": "^1.6.0",
     "bitcoin-protocol": "^4.1.0",
     "bitcoinjs-lib": "^4.0.2",
     "bs58check": "^2.1.2",
@@ -35,11 +35,11 @@
     "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
     "tendermint": "^3.4.1",
-    "web8": "0.0.9",
+    "web8": "0.0.13",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
   },
   "devDependencies": {
-    "lotion-contracts": "0.0.3"
+    "lotion-contracts": "0.0.4"
   }
 }
