@@ -16,6 +16,7 @@ let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
 let { bold, cyan, red } = require('chalk')
 let Web8 = require('web8')
+let browserify = require('browserify')
 
 const CMD = basename(process.argv[1])
 
@@ -239,12 +240,27 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
 }
 
 async function doDeployProcess(web8, contractPath, amount) {
-  let spinner = ora('Deploying contract...').start()
-  let code = fs.readFileSync(contractPath).toString()
+  let spinner = ora('Building contract...').start()
+  let code = await bundleContract(contractPath)
+  spinner.succeed('Built contract.')
+
+  let spinner2 = ora('Deploying contract...').start()
   let result = await web8.createContract({ code, endowment: amount })
-  spinner.succeed('Deployed contract successfully.')
+  spinner2.succeed('Deployed contract successfully.')
 
   console.log('\n\nContract address: ' + bold(result.contractAddress))
+}
+
+function bundleContract(contractPath) {
+  return new Promise((resolve, reject) => {
+    let b = browserify(contractPath, { node: true })
+    b.bundle(function(err, code) {
+      if (err) {
+        throw new Error(err)
+      }
+      resolve('function require(){};' + code.toString())
+    })
+  })
 }
 
 async function getPeggingInfo(client) {

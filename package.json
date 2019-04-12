@@ -27,6 +27,7 @@
     "bitcoin-peg": "^1.6.0",
     "bitcoin-protocol": "^4.1.0",
     "bitcoinjs-lib": "^4.0.2",
+    "browserify": "^16.2.3",
     "bs58check": "^2.1.2",
     "chalk": "^2.4.1",
     "coins": "^4.5.0",
@@ -35,7 +36,7 @@
     "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
     "tendermint": "^3.4.1",
-    "web8": "0.0.14",
+    "web8": "*",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
   },
