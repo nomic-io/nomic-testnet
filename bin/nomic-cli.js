@@ -101,9 +101,9 @@ Send BTC to this address and it will be transferred to your account on the sidec
 
     await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
     process.exit(0)
-  } else if (cmd === 'deploy' && argv.length === 3) {
+  } else if (cmd === 'deploy' && (argv.length === 2 || argv.length === 3)) {
     let contractPath = argv[1]
-    let amount = parseBtcAmount(argv[2])
+    let amount = argv[2] ? parseBtcAmount(argv[2]) : 0
     await doDeployProcess(web8, contractPath, amount)
     process.exit()
   } else {
@@ -258,7 +258,12 @@ function bundleContract(contractPath) {
       if (err) {
         throw new Error(err)
       }
-      resolve('function require(){};' + code.toString())
+      fs.writeFileSync('bundle.js', code.toString())
+      resolve(
+        'function require(){};let Module =' +
+          code.toString() +
+          ';module.exports = Module(1)'
+      )
     })
   })
 }
