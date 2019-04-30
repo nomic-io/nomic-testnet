@@ -32,7 +32,7 @@
     "chalk": "^2.4.1",
     "coins": "^4.5.0",
     "create-hash": "^1.2.0",
-    "lotion": "^0.4.10",
+    "lotion": "^0.4.11",
     "lotion-connect": "^0.1.14",
     "ora": "^3.0.0",
     "tendermint": "^3.4.1",
