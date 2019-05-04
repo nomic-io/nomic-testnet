@@ -16,12 +16,17 @@ let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
 let { bold, cyan, red } = require('chalk')
 let Web8 = require('web8')
+let execa = require('execa')
+let getPort = require('get-port')
 let browserify = require('browserify')
+let diffy = require('diffy')()
+let trim = require('diffy/trim')
+let { RpcClient } = require('tendermint')
 
 const CMD = basename(process.argv[1])
 
 const TESTNET_GCI =
-  '4288a3cfd6928dd67564b1448db47efc9e87bfe7bc7b96f05353e47e9d422ca5'
+  '03c13f8701091afcb9338b7b0a4c4da5d6050da9c556c40942a68ffb437172e2'
 
 const SYMBOL = 'NBTC'
 
@@ -106,6 +111,41 @@ Send BTC to this address and it will be transferred to your account on the sidec
     let amount = argv[2] ? parseBtcAmount(argv[2]) : 0
     await doDeployProcess(web8, contractPath, amount)
     process.exit()
+  } else if (cmd === 'start') {
+    /**
+     * Start full node
+     */
+    const seedNode =
+      'a4040e9f9f3bf6bf9434aaeec3f411d2aeafad94@134.209.50.224:1337'
+    let RPC_PORT = await getPort(26657)
+    let fullNode = execa('node', ['../fullnode/app.js'], {
+      env: {
+        RPC_PORT,
+        SEED_NODE: seedNode
+      }
+    })
+    // fullNode.stdout.pipe(process.stdout)
+    // fullNode.stderr.pipe(process.stderr)
+    let rpc
+    setInterval(async function() {
+      try {
+        if (!rpc) {
+          rpc = RpcClient('http://localhost:' + RPC_PORT)
+        }
+        let status = await rpc.status()
+        diffy.render(function() {
+          return trim(`
+      Validator address: ${status.validator_info.address}
+      Validator voting power: ${status.validator_info.voting_power}
+      Latest block height: ${status.sync_info.latest_block_height}
+      RPC server: http://localhost:${RPC_PORT}
+
+      To gain voting power by staking coins, run:
+      $ ${CMD} stake ${status.validator_info.address} <amount>
+      `)
+        })
+      } catch (e) {}
+    }, 1000)
   } else {
     console.log(USAGE)
     process.exit(1)

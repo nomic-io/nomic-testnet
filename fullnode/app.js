@@ -5,12 +5,21 @@ let coins = require('coins')
 let fs = require('fs')
 let { get } = require('axios')
 
+let peers = []
+if (process.env.SEED_NODE) {
+  peers.push(process.env.SEED_NODE)
+}
+let rpcPort = process.env.RPC_PORT || 1338
+console.log('peers:')
+console.log(peers)
+
 let app = lotion({
-  genesisPath: './genesis.json',
-  keyPath: 'privkey.json',
+  peers,
+  rpcPort,
   p2pPort: 1337,
-  rpcPort: 1338,
-  peers: [],
+  genesisPath: './genesis.json',
+  keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
+  logTendermint: true,
   discovery: false
 })
 
