@@ -118,7 +118,7 @@ Send BTC to this address and it will be transferred to your account on the sidec
     const seedNode =
       'a4040e9f9f3bf6bf9434aaeec3f411d2aeafad94@134.209.50.224:1337'
     let RPC_PORT = await getPort(26657)
-    let fullNode = execa('node', ['../fullnode/app.js'], {
+    let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
       env: {
         RPC_PORT,
         SEED_NODE: seedNode
