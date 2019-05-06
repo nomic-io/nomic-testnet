@@ -22,6 +22,7 @@ let browserify = require('browserify')
 let diffy = require('diffy')()
 let trim = require('diffy/trim')
 let { RpcClient } = require('tendermint')
+let ProgressBar = require('progress')
 
 const CMD = basename(process.argv[1])
 
@@ -115,24 +116,57 @@ Send BTC to this address and it will be transferred to your account on the sidec
     /**
      * Start full node
      */
-    const seedNode =
-      'c7c69d56d4b753add6a14a65c7d714a252b158ce@134.209.50.224:1337'
-    let RPC_PORT = await getPort(26657)
-    let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
-      env: {
-        RPC_PORT,
-        SEED_NODE: seedNode
+    startFullNode(client)
+  } else {
+    console.log(USAGE)
+    process.exit(1)
+  }
+}
+
+main().catch(err => {
+  console.error('ERROR:', err.stack)
+  process.exit(1)
+})
+
+async function startFullNode(lc) {
+  let { sync_info } = await lc.lightClient.rpc.status()
+  let targetHeight = Number(sync_info.latest_block_height)
+  const seedNode =
+    'c7c69d56d4b753add6a14a65c7d714a252b158ce@134.209.50.224:1337'
+  let RPC_PORT = await getPort(26657)
+  let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
+    env: {
+      RPC_PORT,
+      SEED_NODE: seedNode
+    }
+  })
+  fullNode.stdout.pipe(process.stdout)
+  fullNode.stderr.pipe(process.stderr)
+
+  let rpc, bar
+  setInterval(async function() {
+    try {
+      if (!rpc) {
+        rpc = RpcClient('http://localhost:' + RPC_PORT)
       }
-    })
-    fullNode.stdout.pipe(process.stdout)
-    fullNode.stderr.pipe(process.stderr)
-    let rpc
-    setInterval(async function() {
-      try {
-        if (!rpc) {
-          rpc = RpcClient('http://localhost:' + RPC_PORT)
+      if (!bar) {
+        bar = new ProgressBar(
+          '  syncing [:bar] :current/:total :percent :etas',
+          {
+            complete: '=',
+            incomplete: '-',
+            width: 40,
+            total: targetHeight,
+            clear: true
+          }
+        )
+      }
+      let status = await rpc.status()
+      if (!bar.complete) {
+        bar.tick(Number(status.sync_info.latest_block_height) - bar.curr)
+        if (bar.complete) {
         }
-        let status = await rpc.status()
+      } else {
         diffy.render(function() {
           return trim(`
       Validator address: ${status.validator_info.address}
@@ -144,18 +178,10 @@ Send BTC to this address and it will be transferred to your account on the sidec
       $ ${CMD} stake ${status.validator_info.address} <amount>
       `)
         })
-      } catch (e) {}
-    }, 1000)
-  } else {
-    console.log(USAGE)
-    process.exit(1)
-  }
+      }
+    } catch (e) {}
+  }, 1000)
 }
-
-main().catch(err => {
-  console.error('ERROR:', err.stack)
-  process.exit(1)
-})
 
 async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
   // get validators and signatory keys
