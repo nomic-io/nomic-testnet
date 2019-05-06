@@ -10,8 +10,6 @@ if (process.env.SEED_NODE) {
   peers.push(process.env.SEED_NODE)
 }
 let rpcPort = process.env.RPC_PORT || 1338
-console.log('peers:')
-console.log(peers)
 
 let app = lotion({
   peers,
@@ -19,7 +17,7 @@ let app = lotion({
   p2pPort: 1337,
   genesisPath: './genesis.json',
   keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
-  logTendermint: true,
+  logTendermint: false,
   discovery: false
 })
 
@@ -58,7 +56,7 @@ app.use(
 
 async function main() {
   let appInfo = await app.start()
-  console.log(appInfo)
+  // console.log(appInfo)
 
   startWatchdog(appInfo.ports.rpc)
 }
