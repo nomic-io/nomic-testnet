@@ -41,7 +41,7 @@
     "lotion-state-machine": "^0.2.0",
     "ora": "^3.0.0",
     "progress": "^2.0.3",
-    "staking": "^1.0.5",
+    "staking": "^1.0.6",
     "tendermint": "^4.0.2",
     "web8": "0.0.18",
     "webcoin": "^3.1.0",

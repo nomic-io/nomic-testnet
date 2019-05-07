@@ -56,7 +56,7 @@ const trustedHeader = {
   height: 1485792
 }
 
-app.use(clauses())
+app.use(clauses)
 
 app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
 
