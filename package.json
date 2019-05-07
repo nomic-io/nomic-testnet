@@ -38,7 +38,7 @@
     "lotion": "^0.4.19",
     "lotion-connect": "^0.1.19",
     "lotion-contracts": "0.0.10",
-    "lotion-state-machine": "^0.2.0",
+    "lotion-state-machine": "^0.2.2",
     "ora": "^3.0.0",
     "progress": "^2.0.3",
     "staking": "^1.0.8",
