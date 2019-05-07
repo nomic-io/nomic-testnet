@@ -123,7 +123,11 @@ Send BTC to this address and it will be transferred to your account on the sidec
     /**
      * Start full node
      */
-    startFullNode(client)
+    let privKeyPath
+    if (argv[1]) {
+      privKeyPath = path.join(process.cwd(), argv[1])
+    }
+    startFullNode(client, privKeyPath)
   } else if (cmd === 'dev') {
     startDevNode()
   } else {
@@ -160,7 +164,7 @@ async function startDevNode() {
   fullNode.stderr.pipe(process.stderr)
 }
 
-async function startFullNode(lc) {
+async function startFullNode(lc, privKeyPath) {
   let { sync_info } = await lc.lightClient.rpc.status()
   let targetHeight = Number(sync_info.latest_block_height)
   const seedNode =
@@ -169,7 +173,8 @@ async function startFullNode(lc) {
   let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
     env: {
       RPC_PORT,
-      SEED_NODE: seedNode
+      SEED_NODE: seedNode,
+      KEY_PATH: privKeyPath
     }
   })
   fullNode.stdout.pipe(process.stdout)

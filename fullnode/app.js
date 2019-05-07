@@ -8,6 +8,7 @@ let { get } = require('axios')
 let diffy = require('diffy')()
 let trim = require('diffy/trim')
 let util = require('util')
+let clauses = require('clauses')
 
 const devMode = process.env.NODE_ENV === 'dev'
 
@@ -24,6 +25,9 @@ if (devMode) {
 } else {
   genesisPath = require.resolve('./genesis.json')
   keyPath = fs.existsSync('./privkey.json') ? './privkey.json' : null
+  if (process.env.KEY_PATH) {
+    keyPath = process.env.KEY_PATH
+  }
 }
 
 let app = lotion({
@@ -51,6 +55,8 @@ const trustedHeader = {
   nonce: 2223907393,
   height: 1485792
 }
+
+app.use(clauses())
 
 app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
 
