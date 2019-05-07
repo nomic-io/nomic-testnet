@@ -114,6 +114,11 @@ Send BTC to this address and it will be transferred to your account on the sidec
     let amount = argv[2] ? parseBtcAmount(argv[2]) : 0
     await doDeployProcess(web8, contractPath, amount)
     process.exit()
+  } else if (cmd === 'stake' && argv.length === 3) {
+    let validatorAddress = argv[1]
+    let stakeAmount = parseBtcAmount(argv[2])
+    await doStake(coinsWallet, validatorAddress, stakeAmount)
+    process.exit()
   } else if (cmd === 'start') {
     /**
      * Start full node
@@ -131,6 +136,17 @@ main().catch(err => {
   console.error('ERROR:', err.stack)
   process.exit(1)
 })
+
+async function doStake(coinsWallet, validatorPubKey, stakeAmount) {
+  let stakeOutput = {
+    type: 'stake',
+    amount: stakeAmount,
+    pubkey: validatorPubKey,
+    address: coinsWallet.address()
+  }
+
+  await coinsWallet.send([stakeOutput, { type: 'fee', amount: 50 }])
+}
 
 async function startDevNode() {
   let RPC_PORT = await getPort(26657)
@@ -183,13 +199,13 @@ async function startFullNode(lc) {
       } else {
         diffy.render(function() {
           return trim(`
-      Validator address: ${status.validator_info.address}
+      Validator public key: ${status.validator_info.pub_key.value}
       Validator voting power: ${status.validator_info.voting_power}
       Latest block height: ${status.sync_info.latest_block_height}
       RPC server: http://localhost:${RPC_PORT}
 
       To gain voting power by staking coins, run:
-      $ ${CMD} stake ${status.validator_info.address} <amount>
+      $ ${CMD} stake ${status.validator_info.pub_key.value} <amount>
       `)
         })
       }
