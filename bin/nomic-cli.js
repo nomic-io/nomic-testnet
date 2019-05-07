@@ -146,10 +146,13 @@ async function doStake(coinsWallet, validatorPubKey, stakeAmount) {
     type: 'stake',
     amount: stakeAmount,
     validatorPubkey: validatorPubKey,
-    address: coinsWallet.address()
+    address: coinsWallet.address(),
+    bond: true
   }
 
-  await coinsWallet.send([stakeOutput, { type: 'fee', amount: 50 }])
+  console.log(
+    await coinsWallet.send([stakeOutput, { type: 'fee', amount: 50 }])
+  )
 }
 
 async function startDevNode() {
