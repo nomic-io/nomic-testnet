@@ -41,7 +41,8 @@ Usage: ${CMD} [command]
     deposit                       Generate and display Bitcoin deposit address
     withdraw  [address] [amount]  Withdraw ${SYMBOL} to a Bitcoin address
     deploy    [path]    [amount]  Deploy a contract and endow it with ${SYMBOL}
-    start                         Runs a full node
+    start                         Runs a full node on the Nomic testnet
+    dev                           Start a local network for development
 `
 
 async function main() {
@@ -118,6 +119,8 @@ Send BTC to this address and it will be transferred to your account on the sidec
      * Start full node
      */
     startFullNode(client)
+  } else if (cmd === 'dev') {
+    startDevNode()
   } else {
     console.log(USAGE)
     process.exit(1)
@@ -128,6 +131,18 @@ main().catch(err => {
   console.error('ERROR:', err.stack)
   process.exit(1)
 })
+
+async function startDevNode() {
+  let RPC_PORT = await getPort(26657)
+  let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
+    env: {
+      RPC_PORT,
+      NODE_ENV: 'dev'
+    }
+  })
+  fullNode.stdout.pipe(process.stdout)
+  fullNode.stderr.pipe(process.stderr)
+}
 
 async function startFullNode(lc) {
   let { sync_info } = await lc.lightClient.rpc.status()

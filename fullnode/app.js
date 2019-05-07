@@ -1,9 +1,12 @@
 let lotion = require('lotion')
 let bitcoinPeg = require('bitcoin-peg')
 let contracts = require('lotion-contracts')
+let staking = require('./staking.js')
 let coins = require('coins')
 let fs = require('fs')
 let { get } = require('axios')
+
+const devMode = process.env.NODE_ENV === 'dev'
 
 let peers = []
 if (process.env.SEED_NODE) {
@@ -11,13 +14,22 @@ if (process.env.SEED_NODE) {
 }
 let rpcPort = process.env.RPC_PORT || 1338
 
+let keyPath, genesisPath
+if (devMode) {
+  keyPath = require.resolve('./dev-privatekey.json')
+  genesisPath = require.resolve('./dev-genesis.json')
+} else {
+  genesisPath = require.resolve('./genesis.json')
+  keyPath = fs.existsSync('./privkey.json') ? './privkey.json' : null
+}
+
 let app = lotion({
   peers,
+  keyPath,
+  genesisPath,
   rpcPort,
   p2pPort: 1337,
-  genesisPath: './genesis.json',
-  keyPath: fs.existsSync('./privkey.json') ? './privkey.json' : null,
-  logTendermint: false,
+  logTendermint: devMode ? true : false,
   discovery: false
 })
 
@@ -49,6 +61,7 @@ app.use(
     handlers: {
       bitcoin: bitcoinPeg.coinsHandler('bitcoin'),
       contract: contracts()
+      // stake: staking()
     },
     minFee: 50
   })
@@ -56,7 +69,11 @@ app.use(
 
 async function main() {
   let appInfo = await app.start()
-  // console.log(appInfo)
+  if (devMode) {
+    console.log('\n\n\n\n')
+    console.log(appInfo)
+    console.log('\n\n\n\n')
+  }
 
   startWatchdog(appInfo.ports.rpc)
 }
