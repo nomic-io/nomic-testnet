@@ -1,7 +1,7 @@
 let lotion = require('lotion')
 let bitcoinPeg = require('bitcoin-peg')
 let contracts = require('lotion-contracts')
-let staking = require('./staking.js')
+let staking = require('staking')
 let coins = require('coins')
 let fs = require('fs')
 let { get } = require('axios')
@@ -63,8 +63,8 @@ app.use(
     },
     handlers: {
       bitcoin: bitcoinPeg.coinsHandler('bitcoin'),
-      contract: contracts()
-      // stake: staking()
+      contract: contracts(),
+      stake: staking()
     },
     minFee: 50
   })
