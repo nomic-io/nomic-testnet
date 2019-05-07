@@ -141,7 +141,7 @@ async function doStake(coinsWallet, validatorPubKey, stakeAmount) {
   let stakeOutput = {
     type: 'stake',
     amount: stakeAmount,
-    pubkey: validatorPubKey,
+    validatorPubkey: validatorPubKey,
     address: coinsWallet.address()
   }
 
