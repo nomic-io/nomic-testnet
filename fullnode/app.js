@@ -5,6 +5,9 @@ let staking = require('./staking.js')
 let coins = require('coins')
 let fs = require('fs')
 let { get } = require('axios')
+let diffy = require('diffy')()
+let trim = require('diffy/trim')
+let util = require('util')
 
 const devMode = process.env.NODE_ENV === 'dev'
 
@@ -29,7 +32,7 @@ let app = lotion({
   genesisPath,
   rpcPort,
   p2pPort: 1337,
-  logTendermint: devMode ? true : false,
+  logTendermint: false,
   discovery: false
 })
 
@@ -67,13 +70,25 @@ app.use(
   })
 )
 
+if (devMode) {
+  app.useBlock(function(state, context) {
+    diffy.render(function() {
+      return trim(`
+      ============================================
+      Context
+      
+      ${util.inspect(context)}
+      ============================================      
+      State
+      
+      ${util.inspect(state.pbtc)}
+      ============================================`)
+    })
+  })
+}
+
 async function main() {
   let appInfo = await app.start()
-  if (devMode) {
-    console.log('\n\n\n\n')
-    console.log(appInfo)
-    console.log('\n\n\n\n')
-  }
 
   startWatchdog(appInfo.ports.rpc)
 }
