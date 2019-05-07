@@ -64,8 +64,7 @@ app.use(
   'pbtc',
   coins({
     initialBalances: {
-      '4C2tiCHRkdnC1VAwGowvG2CTQr5kReJ3y': 1e9,
-      H7JKepgrCSXecWFGKsToRKkzofpynZfnx: 1e9
+      '4C2tiCHRkdnC1VAwGowvG2CTQr5kReJ3y': 1e9
     },
     handlers: {
       bitcoin: bitcoinPeg.coinsHandler('bitcoin'),
