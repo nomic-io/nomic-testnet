@@ -41,6 +41,7 @@ Usage: ${CMD} [command]
     deposit                       Generate and display Bitcoin deposit address
     withdraw  [address] [amount]  Withdraw ${SYMBOL} to a Bitcoin address
     deploy    [path]    [amount]  Deploy a contract and endow it with ${SYMBOL}
+    start                         Runs a full node
 `
 
 async function main() {
@@ -164,8 +165,6 @@ async function startFullNode(lc) {
       let status = await rpc.status()
       if (!bar.complete) {
         bar.tick(Number(status.sync_info.latest_block_height) - bar.curr)
-        if (bar.complete) {
-        }
       } else {
         diffy.render(function() {
           return trim(`
