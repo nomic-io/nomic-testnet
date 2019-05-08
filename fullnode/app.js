@@ -99,6 +99,7 @@ async function main() {
   /**
    * Start bitcoin signatory process
    */
+  console.log(appInfo)
   startSignatory(
     appInfo.GCI,
     join(appInfo.home, 'config', 'priv_validator_key.json')

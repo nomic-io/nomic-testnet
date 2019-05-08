@@ -171,7 +171,7 @@ async function startFullNode(lc, privKeyPath) {
   let { sync_info } = await lc.lightClient.rpc.status()
   let targetHeight = Number(sync_info.latest_block_height)
   const seedNode =
-    'f83968a41cf9428f8ba0049446a0b0b0bc017995@134.209.50.224:1337'
+    'fcdd385cd42869764c9613fbff12f0766f60276e@134.209.50.224:1337'
   let RPC_PORT = await getPort(26657)
   let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
     env: {
