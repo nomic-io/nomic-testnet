@@ -9,6 +9,8 @@ let diffy = require('diffy')()
 let trim = require('diffy/trim')
 let util = require('util')
 let clauses = require('clauses')
+let { join } = require('path')
+let execa = require('execa')
 
 const devMode = process.env.NODE_ENV === 'dev'
 
@@ -94,7 +96,13 @@ if (devMode) {
 
 async function main() {
   let appInfo = await app.start()
-
+  /**
+   * Start bitcoin signatory process
+   */
+  startSignatory(
+    appInfo.GCI,
+    join(appInfo.home, 'config', 'priv_validator_key.json')
+  )
   startWatchdog(appInfo.ports.rpc)
 }
 
@@ -111,6 +119,32 @@ main().catch(err => {
   console.error(err.stack)
   process.exit(1)
 })
+
+async function startSignatory(gci, privKeyPath) {
+  while (true) {
+    try {
+      let signatoryProcess = execa('node', [
+        require.resolve('../node_modules/bitcoin-peg/bin/signatory.js'),
+        gci,
+        privKeyPath
+      ])
+
+      signatoryProcess.stdout.resume()
+      signatoryProcess.stderr.resume()
+
+      await signatoryProcess
+    } catch (e) {}
+    await delay(5000)
+  }
+}
+
+function delay(ms = 1000) {
+  return new Promise(resolve => {
+    setTimeout(function() {
+      resolve()
+    }, ms)
+  })
+}
 
 function startWatchdog(rpcPort) {
   // kills process if the RPC is hanging
