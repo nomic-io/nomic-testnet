@@ -182,6 +182,12 @@ async function startFullNode(lc, privKeyPath) {
   })
   fullNode.stdout.pipe(process.stdout)
   fullNode.stderr.pipe(process.stderr)
+  /**
+   * Once full node has started, we can safely ignore light client errors.
+   *
+   * TODO: Close light client connection instead of swallowing errors.
+   */
+  lc.on('error', function() {})
 
   let rpc, bar
   setInterval(async function() {
