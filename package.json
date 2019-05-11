@@ -36,7 +36,7 @@
     "diffy": "^2.1.0",
     "execa": "^1.0.0",
     "lotion": "0.4.25",
-    "lotion-connect": "^0.1.21",
+    "lotion-connect": "0.1.22",
     "lotion-contracts": "0.0.10",
     "ora": "^3.0.0",
     "progress": "^2.0.3",
