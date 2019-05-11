@@ -19,6 +19,7 @@ let Web8 = require('web8')
 let execa = require('execa')
 let getPort = require('get-port')
 let browserify = require('browserify')
+let path = require('path')
 let diffy = require('diffy')()
 let trim = require('diffy/trim')
 let { RpcClient } = require('tendermint')
@@ -392,12 +393,12 @@ function generateSecpPrivateKey() {
 
 function loadWallet(client) {
   let privKey
-  let path = join(os.homedir(), '.coins')
+  let walletPath = join(os.homedir(), '.coins')
   if (!fs.existsSync(path)) {
     privKey = generateSecpPrivateKey()
-    fs.writeFileSync(path, privKey.toString('hex'), 'utf8')
+    fs.writeFileSync(walletPath, privKey.toString('hex'), 'utf8')
   } else {
-    privKey = Buffer.from(fs.readFileSync(path, 'utf8'), 'hex')
+    privKey = Buffer.from(fs.readFileSync(walletPath, 'utf8'), 'hex')
   }
 
   return coins.wallet(privKey, client, { route: 'pbtc' })
