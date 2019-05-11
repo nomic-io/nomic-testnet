@@ -400,7 +400,7 @@ function generateSecpPrivateKey() {
 function loadWallet(client) {
   let privKey
   let walletPath = join(os.homedir(), '.coins')
-  if (!fs.existsSync(path)) {
+  if (!fs.existsSync(walletPath)) {
     privKey = generateSecpPrivateKey()
     fs.writeFileSync(walletPath, privKey.toString('hex'), 'utf8')
   } else {
