@@ -19,7 +19,6 @@ let Web8 = require('web8')
 let execa = require('execa')
 let getPort = require('get-port')
 let browserify = require('browserify')
-let path = require('path')
 let diffy = require('diffy')()
 let trim = require('diffy/trim')
 let { RpcClient } = require('tendermint')
@@ -126,7 +125,7 @@ Send BTC to this address and it will be transferred to your account on the sidec
      */
     let privKeyPath
     if (argv[1]) {
-      privKeyPath = path.join(process.cwd(), argv[1])
+      privKeyPath = join(process.cwd(), argv[1])
     }
     startFullNode(client, privKeyPath)
   } else if (cmd === 'dev') {
