@@ -41,7 +41,7 @@
     "ora": "^3.0.0",
     "progress": "^2.0.3",
     "staking": "^1.0.8",
-    "tendermint": "^4.0.2",
+    "tendermint": "4.0.6",
     "web8": "0.0.18",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"

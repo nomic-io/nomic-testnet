@@ -265,7 +265,7 @@ async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
     console.log(
       red(
         `An error occurred.\nDon't worry, your deposit is still going through.\nThe coins should show up in your wallet in a few minutes, check your balance with ${cyan(
-          '`nbtc balance`'
+          '`' + CMD + ' balance`'
         )}.`
       )
     )
@@ -422,3 +422,9 @@ function sleep(ms = 1000) {
 function parseBtcAmount(str) {
   return Math.round(Number(str) * 1e8)
 }
+
+process.removeAllListeners('uncaughtException')
+process.on('uncaughtException', function(e) {
+  console.log('error:')
+  console.log(e)
+})
