@@ -1,66 +1,46 @@
 let lotion = require('lotion')
 let bitcoinPeg = require('bitcoin-peg')
-let contracts = require('lotion-contracts')
 let staking = require('staking')
-let coins = require('coins')
-let fs = require('fs')
-let { get } = require('axios')
-let diffy = require('diffy')()
-let trim = require('diffy/trim')
-let util = require('util')
-let clauses = require('clauses')
 let { join } = require('path')
+let coins = require('coins')
+let { get } = require('axios')
+let clauses = require('clauses')
 let execa = require('execa')
+let startRelayer = require('./relay.js')
 
-const devMode = process.env.NODE_ENV === 'dev'
-
-let peers = []
-if (process.env.SEED_NODE) {
-  peers.push(process.env.SEED_NODE)
-}
-let rpcPort = process.env.RPC_PORT || 1338
-
-let keyPath, genesisPath
-if (devMode) {
-  keyPath = require.resolve('./dev-privatekey.json')
-  genesisPath = require.resolve('./dev-genesis.json')
-} else {
-  genesisPath = require.resolve('./genesis.json')
-  keyPath = fs.existsSync('./privkey.json') ? './privkey.json' : null
-  if (process.env.KEY_PATH) {
-    keyPath = process.env.KEY_PATH
-  }
-}
+let config = process.env.CONFIG
+  ? JSON.parse(process.env.CONFIG)
+  : require('../config.js')
 
 let app = lotion({
-  peers,
-  keyPath,
-  genesisPath,
-  rpcPort,
-  p2pPort: 1337,
+  peers: config.fullNode.seeds,
+  keyPath: config.fullNode.keyPath,
+  genesisPath: config.genesisPath,
+  rpcPort: config.fullNode.rpcPort,
+  p2pPort: config.fullNode.p2pPort,
   logTendermint: false,
   discovery: false
 })
 
 const trustedHeader = {
+  height: 1574496,
   version: 1073676288,
   prevHash: Buffer.from(
-    '08d61fcf532a044364f0648a41a55bba405d5aa0bf6f415d8402000000000000',
+    '95ca0f2b97bb3a51a01685d0d678edf09e543924ba3fe85d5200000000000000',
     'hex'
   ),
   merkleRoot: Buffer.from(
-    'a4fb1664d00ae4448dbdf8f99f1a78f7c5bb8036fd69d6f34aed5ee62386f65c',
+    '708601f5f9b68b75321de9ceeab3426daca17313cdc1fb964033b285789a2f1c',
     'hex'
   ),
-  timestamp: 1556877853,
-  bits: 436373240,
-  nonce: 388744679,
-  height: 1514016
+  timestamp: 1565789713,
+  bits: 436336433,
+  nonce: 1552477045
 }
 
 app.use(clauses)
 
-app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc'))
+app.use('bitcoin', bitcoinPeg(trustedHeader, 'pbtc', 'testnet'))
 
 app.use(
   'pbtc',
@@ -71,40 +51,27 @@ app.use(
     },
     handlers: {
       bitcoin: bitcoinPeg.coinsHandler('bitcoin'),
-      contract: contracts(),
       stake: staking()
     },
     minFee: 50
   })
 )
 
-if (devMode) {
-  app.useBlock(function(state, context) {
-    diffy.render(function() {
-      return trim(`
-      ============================================
-      Context
-      
-      ${util.inspect(context)}
-      ============================================      
-      State
-      
-      ${util.inspect(state.pbtc)}
-      ============================================`)
-    })
-  })
-}
-
 async function main() {
   let appInfo = await app.start()
   /**
+   * Start relayer process
+   */
+  let relayer = await startRelayer(config.genesisPath, appInfo.ports.rpc)
+
+  /**
    * Start bitcoin signatory process
    */
-  startSignatory(
-    appInfo.GCI,
-    join(appInfo.home, 'config', 'priv_validator_key.json')
-  )
-  startWatchdog(appInfo.ports.rpc)
+  // startSignatory(
+  //   join(appInfo.home, 'config', 'genesis.json'),
+  //   join(appInfo.home, 'config', 'priv_validator_key.json')
+  // )
+  // startWatchdog(appInfo.ports.rpc)
 }
 
 process.on('unhandledRejection', e => {
@@ -121,12 +88,12 @@ main().catch(err => {
   process.exit(1)
 })
 
-async function startSignatory(gci, privKeyPath) {
+async function startSignatory(genesisPath, privKeyPath) {
   while (true) {
     try {
       let signatoryProcess = execa('node', [
         require.resolve('../node_modules/bitcoin-peg/bin/signatory.js'),
-        gci,
+        genesisPath,
         privKeyPath
       ])
 
@@ -134,7 +101,11 @@ async function startSignatory(gci, privKeyPath) {
       signatoryProcess.stderr.resume()
 
       await signatoryProcess
-    } catch (e) {}
+      console.log('signatory process started')
+    } catch (e) {
+      console.log('error starting signatory:')
+      console.log(e)
+    }
     await delay(5000)
   }
 }
