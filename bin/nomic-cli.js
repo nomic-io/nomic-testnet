@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 let argv = process.argv.slice(2)
 
 let os = require('os')
@@ -8,7 +7,7 @@ let { join, basename } = require('path')
 let { randomBytes, createHash } = require('crypto')
 let secp256k1 = require('secp256k1')
 let coins = require('coins')
-let connect = require('lotion-connect')
+let { connect } = require('lotion')
 let ora = require('ora')
 let bitcoin = require('../lib/bitcoin.js')
 let peg = require('bitcoin-peg')
@@ -20,14 +19,12 @@ let execa = require('execa')
 let getPort = require('get-port')
 let browserify = require('browserify')
 let diffy = require('diffy')()
-let trim = require('diffy/trim')
+let trim = require('diffy/trim+newline')
 let { RpcClient } = require('tendermint')
 let ProgressBar = require('progress')
+let config = require('../config.js')
 
 const CMD = basename(process.argv[1])
-
-const TESTNET_GCI =
-  '03c13f8701091afcb9338b7b0a4c4da5d6050da9c556c40942a68ffb437172e2'
 
 const SYMBOL = 'NBTC'
 
@@ -43,6 +40,7 @@ Usage: ${CMD} [command]
     deploy    [path]    [amount]  Deploy a contract and endow it with ${SYMBOL}
     start                         Runs a full node on the Nomic testnet
     dev                           Start a local network for development
+    stake     [pubkey] [amount]   Stake an amount of coins to a validator public key
 `
 
 async function main() {
@@ -51,24 +49,35 @@ async function main() {
     process.exit(1)
   }
 
-  let gci = process.env.gci || TESTNET_GCI
+  let cmd = argv[0]
+
+  if (cmd === 'dev') {
+    await startDevNode()
+    return
+  } else if (cmd === 'start') {
+    /**
+     * Start full node
+     */
+
+    startFullNode()
+    return
+  }
   let client = await connect(
-    gci,
+    config.GCI,
     {
-      nodes: ['ws://134.209.50.224:1338'],
-      genesis: require('./genesis.json')
+      nodes: config.lightClient.rpcSeeds,
+      genesis: require(config.genesisPath)
     }
   )
   let coinsWallet = loadWallet(client)
-  let web8 = await Web8()
 
-  let cmd = argv[0]
   if (cmd === 'balance' && argv.length === 1) {
     console.log(`
 ${bold('YOUR ADDRESS:')} ${cyan(coinsWallet.address())}
 ${bold('YOUR BALANCE:')} ${cyan(
       (await coinsWallet.balance()) / 1e8
     )} ${SYMBOL}`)
+
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
@@ -119,17 +128,6 @@ Send BTC to this address and it will be transferred to your account on the sidec
     let stakeAmount = parseBtcAmount(argv[2])
     await doStake(coinsWallet, validatorAddress, stakeAmount)
     process.exit()
-  } else if (cmd === 'start') {
-    /**
-     * Start full node
-     */
-    let privKeyPath
-    if (argv[1]) {
-      privKeyPath = join(process.cwd(), argv[1])
-    }
-    startFullNode(client, privKeyPath)
-  } else if (cmd === 'dev') {
-    startDevNode()
   } else {
     console.log(USAGE)
     process.exit(1)
@@ -156,7 +154,8 @@ async function doStake(coinsWallet, validatorPubKey, stakeAmount) {
 }
 
 async function startDevNode() {
-  let RPC_PORT = await getPort(26657)
+  let RPC_PORT = 26657
+
   let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
     env: {
       RPC_PORT,
@@ -167,62 +166,38 @@ async function startDevNode() {
   fullNode.stderr.pipe(process.stderr)
 }
 
-async function startFullNode(lc, privKeyPath) {
-  let { sync_info, node_info } = await lc.lightClient.rpc.status()
-  let targetHeight = Number(sync_info.latest_block_height)
-  const seedNode = `${node_info.id}@134.209.50.224:1337`
-  let RPC_PORT = await getPort(26657)
+async function startFullNode() {
+  // const seedNode = `${node_info.id}@134.209.50.224:1337`
   let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
     env: {
-      RPC_PORT,
-      SEED_NODE: seedNode,
-      KEY_PATH: privKeyPath
+      CONFIG: JSON.stringify(config)
     }
   })
   fullNode.stdout.pipe(process.stdout)
   fullNode.stderr.pipe(process.stderr)
-  /**
-   * Once full node has started, we can safely ignore light client errors.
-   *
-   * TODO: Close light client connection instead of swallowing errors.
-   */
-  lc.on('error', function() {})
-
   let rpc, bar
   setInterval(async function() {
     try {
       if (!rpc) {
-        rpc = RpcClient('http://localhost:' + RPC_PORT)
+        rpc = RpcClient('http://localhost:' + config.fullNode.rpcPort)
       }
-      if (!bar) {
-        bar = new ProgressBar(
-          '  syncing [:bar] :current/:total :percent :etas',
-          {
-            complete: '=',
-            incomplete: '-',
-            width: 40,
-            total: targetHeight,
-            clear: true
-          }
-        )
-      }
+
       let status = await rpc.status()
-      if (!bar.complete) {
-        bar.tick(Number(status.sync_info.latest_block_height) - bar.curr)
-      } else {
-        diffy.render(function() {
-          return trim(`
+
+      diffy.render(function() {
+        return trim(`
       Validator public key: ${status.validator_info.pub_key.value}
       Validator voting power: ${status.validator_info.voting_power}
       Latest block height: ${status.sync_info.latest_block_height}
-      RPC server: http://localhost:${RPC_PORT}
+      RPC server: http://localhost:${config.fullNode.rpcPort}
 
       To gain voting power by staking coins, run:
       $ ${CMD} stake ${status.validator_info.pub_key.value} <amount>
       `)
-        })
-      }
-    } catch (e) {}
+      })
+    } catch (e) {
+      console.log(e)
+    }
   }, 1000)
 }
 
@@ -245,7 +220,7 @@ async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
   let spinner2 = ora('Broadcasting deposit transaction...').start()
 
   // build intermediate address -> signatories transaction
-  let depositTransaction = peg.deposit.createTx(
+  let depositTransaction = peg.deposit.createBitcoinTx(
     validators,
     signatories,
     depositUTXOs,
