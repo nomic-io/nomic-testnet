@@ -62,15 +62,16 @@ async function main() {
   /**
    * Start relayer process
    */
-  let relayer = await startRelayer(config.genesisPath, appInfo.ports.rpc)
+  let relayer = startRelayer(config.genesisPath, appInfo.ports.rpc)
 
   /**
    * Start bitcoin signatory process
    */
-  // startSignatory(
-  //   join(appInfo.home, 'config', 'genesis.json'),
-  //   join(appInfo.home, 'config', 'priv_validator_key.json')
-  // )
+  startSignatory(
+    join(appInfo.home, 'config', 'genesis.json'),
+    join(appInfo.home, 'config', 'priv_validator_key.json'),
+    appInfo.ports.rpc
+  )
   // startWatchdog(appInfo.ports.rpc)
 }
 
@@ -88,13 +89,14 @@ main().catch(err => {
   process.exit(1)
 })
 
-async function startSignatory(genesisPath, privKeyPath) {
+async function startSignatory(genesisPath, privKeyPath, lotionRpcPort) {
   while (true) {
     try {
       let signatoryProcess = execa('node', [
         require.resolve('../node_modules/bitcoin-peg/bin/signatory.js'),
         genesisPath,
-        privKeyPath
+        privKeyPath,
+        'ws://localhost:' + lotionRpcPort
       ])
 
       signatoryProcess.stdout.resume()

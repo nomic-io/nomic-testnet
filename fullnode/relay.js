@@ -11,9 +11,7 @@ module.exports = async function startRelayer(genesisPath, lotionRpcPort) {
       'foo:e1fcea9fb59df8b0388f251984fe85$26431097d48c5b6047df8dee64f387f63835c01a2a463728ad75087d0133b8e6',
     testnet: true
   })
-  console.log('starting bitcoin node')
   await node.started()
-  console.log('started bitcoin node.')
 
   // relay.step() happens in an ephemeral child process.
   while (true) {
@@ -23,7 +21,6 @@ module.exports = async function startRelayer(genesisPath, lotionRpcPort) {
       genesisPath,
       'ws://localhost:' + lotionRpcPort
     ])
-    console.log('started relayer process.')
     relayerProcess.stdout.on('data', function(chunk) {
       console.log(chunk.toString())
     })
