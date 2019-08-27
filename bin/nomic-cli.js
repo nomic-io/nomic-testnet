@@ -18,8 +18,6 @@ let Web8 = require('web8')
 let execa = require('execa')
 let getPort = require('get-port')
 let browserify = require('browserify')
-let diffy = require('diffy')()
-let trim = require('diffy/trim+newline')
 let { RpcClient } = require('tendermint')
 let ProgressBar = require('progress')
 let config = require('../config.js')
@@ -175,30 +173,9 @@ async function startFullNode() {
   })
   fullNode.stdout.pipe(process.stdout)
   fullNode.stderr.pipe(process.stderr)
-  let rpc, bar
-  setInterval(async function() {
-    try {
-      if (!rpc) {
-        rpc = RpcClient('http://localhost:' + config.fullNode.rpcPort)
-      }
-
-      let status = await rpc.status()
-
-      diffy.render(function() {
-        return trim(`
-      Validator public key: ${status.validator_info.pub_key.value}
-      Validator voting power: ${status.validator_info.voting_power}
-      Latest block height: ${status.sync_info.latest_block_height}
-      RPC server: http://localhost:${config.fullNode.rpcPort}
-
-      To gain voting power by staking coins, run:
-      $ ${CMD} stake ${status.validator_info.pub_key.value} <amount>
-      `)
-      })
-    } catch (e) {
-      console.log(e)
-    }
-  }, 1000)
+  console.log(
+    'Started full node. RPC server: http://localhost:' + config.fullNode.rpcPort
+  )
 }
 
 async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
