@@ -5,13 +5,9 @@ let Relay = require('bitcoin-peg').relay.Relay
 
 async function doRelayStep() {
   try {
-    console.log('doing relay step..')
-    console.log('relay:')
-    console.log(Relay)
     let bitcoindRpcPort = Number(argv[0])
     let genesisPath = argv[1]
     let lotionRpcSeed = argv[2]
-    console.log('connecting rpc on port ' + bitcoindRpcPort)
     let rpc = new RPCClient({
       network: 'testnet',
       port: bitcoindRpcPort,
@@ -34,7 +30,6 @@ async function doRelayStep() {
       bitcoinRPC: rpc,
       lotionLightClient: lightClient
     })
-    console.log(relay.step)
     await relay.step()
   } catch (e) {
     console.log(e)

@@ -15,12 +15,16 @@ module.exports = async function startRelayer(genesisPath, lotionRpcPort) {
 
   // relay.step() happens in an ephemeral child process.
   while (true) {
-    let relayerProcess = execa('node', [
-      require.resolve('./lib/relay-step.js'),
-      rpcport,
-      genesisPath,
-      'ws://localhost:' + lotionRpcPort
-    ])
+    let relayerProcess = execa(
+      'node',
+      [
+        require.resolve('./lib/relay-step.js'),
+        rpcport,
+        genesisPath,
+        'ws://localhost:' + lotionRpcPort
+      ],
+      { timeout: 60 * 1000 }
+    )
     relayerProcess.stdout.on('data', function(chunk) {
       console.log(chunk.toString())
     })
