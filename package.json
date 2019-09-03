@@ -1,9 +1,9 @@
 {
-  "name": "nomic-testnet",
-  "version": "0.0.3",
+  "name": "nomic-cli",
+  "version": "0.0.42",
   "description": "Pegged bitcoin proof-of-stake sidechain cli wallet",
   "bin": {
-    "nbtc": "bin/fbtc.js"
+    "nomic": "bin/nomic-cli.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -24,18 +24,29 @@
     "axios": "^0.18.0",
     "bitcoin-filter": "^0.2.0",
     "bitcoin-inventory": "^1.2.2",
-    "bitcoin-peg": "^1.4.4",
+    "bitcoin-peg": "file:../bitcoin-peg",
     "bitcoin-protocol": "^4.1.0",
+    "bitcoind": "github:nomic-io/node-bitcoind#v0.18.0",
     "bitcoinjs-lib": "^4.0.2",
+    "browserify": "^16.2.3",
     "bs58check": "^2.1.2",
     "chalk": "^2.4.1",
+    "clauses": "^1.1.2",
     "coins": "^4.5.0",
     "create-hash": "^1.2.0",
-    "lotion": "^0.4.10",
-    "lotion-connect": "^0.1.14",
+    "diffy": "2.1.0",
+    "execa": "^1.0.0",
+    "lotion": "0.4.26",
+    "lotion-connect": "0.1.22",
+    "lotion-contracts": "0.0.10",
+    "lotion-mock": "file:../lotion-mock",
     "ora": "^3.0.0",
-    "tendermint": "^3.4.1",
+    "progress": "^2.0.3",
+    "staking": "^1.0.8",
+    "tendermint": "4.0.6",
+    "web8": "0.0.18",
     "webcoin": "^3.1.0",
     "webcoin-bitcoin-testnet": "^1.1.1"
-  }
+  },
+  "devDependencies": {}
 }

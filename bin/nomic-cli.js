@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 let argv = process.argv.slice(2)
 
 let os = require('os')
@@ -8,18 +7,22 @@ let { join, basename } = require('path')
 let { randomBytes, createHash } = require('crypto')
 let secp256k1 = require('secp256k1')
 let coins = require('coins')
-let connect = require('lotion-connect')
+let { connect } = require('lotion')
 let ora = require('ora')
 let bitcoin = require('../lib/bitcoin.js')
 let peg = require('bitcoin-peg')
 let { relayDeposit, buildDisbursalTransaction } = peg.relay
 let base58 = require('bs58check')
 let { bold, cyan, red } = require('chalk')
+let Web8 = require('web8')
+let execa = require('execa')
+let getPort = require('get-port')
+let browserify = require('browserify')
+let { RpcClient } = require('tendermint')
+let ProgressBar = require('progress')
+let config = require('../config.js')
 
 const CMD = basename(process.argv[1])
-
-const TESTNET_GCI =
-  '58bae8263f5ac4f1a3c93c2876538054fd8727d44504c30973a08ef82c64424b'
 
 const SYMBOL = 'NBTC'
 
@@ -32,6 +35,10 @@ Usage: ${CMD} [command]
     send      [address] [amount]  Send deposited coins to another address
     deposit                       Generate and display Bitcoin deposit address
     withdraw  [address] [amount]  Withdraw ${SYMBOL} to a Bitcoin address
+    deploy    [path]    [amount]  Deploy a contract and endow it with ${SYMBOL}
+    start                         Runs a full node on the Nomic testnet
+    dev                           Start a local network for development
+    stake     [pubkey] [amount]   Stake an amount of coins to a validator public key
 `
 
 async function main() {
@@ -40,21 +47,35 @@ async function main() {
     process.exit(1)
   }
 
-  let gci = process.env.gci || TESTNET_GCI
+  let cmd = argv[0]
+
+  if (cmd === 'dev') {
+    await startDevNode()
+    return
+  } else if (cmd === 'start') {
+    /**
+     * Start full node
+     */
+
+    startFullNode()
+    return
+  }
   let client = await connect(
-    gci,
+    config.GCI,
     {
-      nodes: ['ws://pbtc.mappum.com:1338', 'ws://pbtc.judd.co:1338'],
-      genesis: require('./genesis.json')
+      nodes: config.lightClient.rpcSeeds,
+      genesis: require(config.genesisPath)
     }
   )
   let coinsWallet = loadWallet(client)
 
-  let cmd = argv[0]
   if (cmd === 'balance' && argv.length === 1) {
     console.log(`
 ${bold('YOUR ADDRESS:')} ${cyan(coinsWallet.address())}
-${bold('YOUR BALANCE:')} ${cyan((await coinsWallet.balance()) / 1e8)} ${SYMBOL}`)
+${bold('YOUR BALANCE:')} ${cyan(
+      (await coinsWallet.balance()) / 1e8
+    )} ${SYMBOL}`)
+
     process.exit()
   } else if (cmd === 'send' && argv.length === 3) {
     let recipientCoinsAddress = argv[1]
@@ -87,37 +108,77 @@ ${cyan(btcDepositAddress)}
 Send BTC to this address and it will be transferred to your account on the sidechain.
 `)
     // change it to a check mark
-    await doDepositProcess(
-      depositPrivateKey,
-      p2pkh,
-      client,
-      coinsWallet
-    )
+    await doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet)
     process.exit()
   } else if (cmd === 'withdraw' && argv.length === 3) {
     let recipientBtcAddress = argv[1]
     let amount = parseBtcAmount(argv[2])
 
     await doWithdrawProcess(client, coinsWallet, recipientBtcAddress, amount)
-
     process.exit(0)
+  } else if (cmd === 'deploy' && (argv.length === 2 || argv.length === 3)) {
+    let contractPath = argv[1]
+    let amount = argv[2] ? parseBtcAmount(argv[2]) : 0
+    await doDeployProcess(web8, contractPath, amount)
+    process.exit()
+  } else if (cmd === 'stake' && argv.length === 3) {
+    let validatorAddress = argv[1]
+    let stakeAmount = parseBtcAmount(argv[2])
+    await doStake(coinsWallet, validatorAddress, stakeAmount)
+    process.exit()
   } else {
     console.log(USAGE)
     process.exit(1)
   }
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error('ERROR:', err.stack)
   process.exit(1)
 })
 
-async function doDepositProcess(
-  depositPrivateKey,
-  p2pkh,
-  client,
-  coinsWallet
-) {
+async function doStake(coinsWallet, validatorPubKey, stakeAmount) {
+  let stakeOutput = {
+    type: 'stake',
+    amount: stakeAmount,
+    validatorPubkey: validatorPubKey,
+    address: coinsWallet.address(),
+    bond: true
+  }
+
+  console.log(
+    await coinsWallet.send([stakeOutput, { type: 'fee', amount: 50 }])
+  )
+}
+
+async function startDevNode() {
+  let RPC_PORT = 26657
+
+  let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
+    env: {
+      RPC_PORT,
+      NODE_ENV: 'dev'
+    }
+  })
+  fullNode.stdout.pipe(process.stdout)
+  fullNode.stderr.pipe(process.stderr)
+}
+
+async function startFullNode() {
+  // const seedNode = `${node_info.id}@134.209.50.224:1337`
+  let fullNode = execa('node', [require.resolve('../fullnode/app.js')], {
+    env: {
+      CONFIG: JSON.stringify(config)
+    }
+  })
+  fullNode.stdout.pipe(process.stdout)
+  fullNode.stderr.pipe(process.stderr)
+  console.log(
+    'Started full node. RPC server: http://localhost:' + config.fullNode.rpcPort
+  )
+}
+
+async function doDepositProcess(depositPrivateKey, p2pkh, client, coinsWallet) {
   // get validators and signatory keys
   let { validators, signatories } = await getPeggingInfo(client)
 
@@ -136,7 +197,7 @@ async function doDepositProcess(
   let spinner2 = ora('Broadcasting deposit transaction...').start()
 
   // build intermediate address -> signatories transaction
-  let depositTransaction = peg.deposit.createTx(
+  let depositTransaction = peg.deposit.createBitcoinTx(
     validators,
     signatories,
     depositUTXOs,
@@ -151,9 +212,15 @@ async function doDepositProcess(
     .toString('hex')}`
   spinner2.succeed(`Deposit transaction broadcasted: ${cyan(explorerLink)}`)
 
-  process.on('exit', (code) => {
+  process.on('exit', code => {
     if (code === 0) return
-    console.log(red(`An error occurred.\nDon't worry, your deposit is still going through.\nThe coins should show up in your wallet in a few minutes, check your balance with ${cyan('`nbtc balance`')}.`))
+    console.log(
+      red(
+        `An error occurred.\nDon't worry, your deposit is still going through.\nThe coins should show up in your wallet in a few minutes, check your balance with ${cyan(
+          '`' + CMD + ' balance`'
+        )}.`
+      )
+    )
     process.exit(1)
   })
 
@@ -233,6 +300,35 @@ async function doWithdrawProcess(client, coinsWallet, address, amount) {
   spinner3.succeed(`Withdrawal succeeded: ${cyan(withdrawalTxLink)}`)
 }
 
+async function doDeployProcess(web8, contractPath, amount) {
+  let spinner = ora('Building contract...').start()
+  let code = await bundleContract(contractPath)
+  spinner.succeed('Built contract.')
+
+  let spinner2 = ora('Deploying contract...').start()
+  let result = await web8.createContract({ code, endowment: amount })
+  spinner2.succeed('Deployed contract successfully.')
+
+  console.log('\n\nContract address: ' + bold(result.contractAddress))
+}
+
+function bundleContract(contractPath) {
+  return new Promise((resolve, reject) => {
+    let b = browserify(contractPath, { node: true })
+    b.bundle(function(err, code) {
+      if (err) {
+        throw new Error(err)
+      }
+      fs.writeFileSync('bundle.js', code.toString())
+      resolve(
+        'function require(){};let Module =' +
+          code.toString() +
+          ';module.exports = Module(1)'
+      )
+    })
+  })
+}
+
 async function getPeggingInfo(client) {
   let validators = {}
   client.validators.forEach(v => {
@@ -254,25 +350,33 @@ function generateSecpPrivateKey() {
 
 function loadWallet(client) {
   let privKey
-  let path = join(os.homedir(), '.coins')
-  if (!fs.existsSync(path)) {
+  let walletPath = join(os.homedir(), '.coins')
+  if (!fs.existsSync(walletPath)) {
     privKey = generateSecpPrivateKey()
-    fs.writeFileSync(path, privKey.toString('hex'), 'utf8')
+    fs.writeFileSync(walletPath, privKey.toString('hex'), 'utf8')
   } else {
-    privKey = Buffer.from(fs.readFileSync(path, 'utf8'), 'hex')
+    privKey = Buffer.from(fs.readFileSync(walletPath, 'utf8'), 'hex')
   }
 
   return coins.wallet(privKey, client, { route: 'pbtc' })
 }
 
 function sha256(data) {
-  return createHash('sha256').update(data).digest()
+  return createHash('sha256')
+    .update(data)
+    .digest()
 }
 
 function sleep(ms = 1000) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function parseBtcAmount (str) {
+function parseBtcAmount(str) {
   return Math.round(Number(str) * 1e8)
 }
+
+process.removeAllListeners('uncaughtException')
+process.on('uncaughtException', function(e) {
+  console.log('error:')
+  console.log(e)
+})

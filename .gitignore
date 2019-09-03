@@ -1,2 +1,4 @@
 node_modules/
 privkey.json
+
+fullnode/dev-privkey\.json
